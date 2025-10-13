@@ -15,16 +15,18 @@ export const generateGravatarUrl = (email: string, size: number = 40): string =>
 export const getProfilePictureUrl = (employee: any, email: string, size: number = 40): string => {
   // Only use uploaded picture if it exists and is not null/empty
   if (employee?.profilePicture && employee.profilePicture.trim() !== '') {
-    // Use the server base URL for serving static files
-    const serverBaseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000';
+    // Use the API base URL for serving static files (same as API calls)
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
     let profilePath = employee.profilePicture;
     
     // Handle both old and new URL formats
     if (profilePath.startsWith('/api/')) {
       // Old format: /api/upload/profile-picture/filename.jpg
+      const serverBaseUrl = apiBaseUrl.replace('/api', '');
       return `${serverBaseUrl}${profilePath}`;
     } else {
       // New format: /upload/profile-picture/filename.jpg
+      const serverBaseUrl = apiBaseUrl.replace('/api', '');
       return `${serverBaseUrl}/api${profilePath}`;
     }
   }
