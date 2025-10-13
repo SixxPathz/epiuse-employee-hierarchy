@@ -2,26 +2,23 @@
   # Base directory for the project
   base = "apps/frontend"
   
-  # Build command
-  command = "npm run build"
+  # Build command - Next.js 14 with static export
+  command = "npm ci && npm run build"
   
-  # Publish directory
-  publish = "apps/frontend/.next"
+  # Publish directory - where static files are generated
+  publish = "out"
 
 [build.environment]
   # Node.js version
   NODE_VERSION = "18.17.0"
   
-  # NPM version
+  # NPM version  
   NPM_VERSION = "9.6.7"
+  
+  # Production environment
+  NODE_ENV = "production"
 
-# Redirect rules for SPA
-[[redirects]]
-  from = "/api/*"
-  to = "https://your-railway-backend.up.railway.app/api/:splat"
-  status = 200
-  force = true
-
+# Redirect rules for SPA routing
 [[redirects]]
   from = "/*"
   to = "/index.html"
@@ -35,10 +32,3 @@
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "same-origin"
-
-# Next.js specific settings
-[context.production]
-  command = "npm run build && npm run export"
-
-[context.production.environment]
-  NODE_ENV = "production"
