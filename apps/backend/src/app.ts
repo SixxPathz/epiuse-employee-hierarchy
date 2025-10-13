@@ -7,6 +7,7 @@ import { employeeRoutes } from './api/employees';
 import { authRoutes } from './api/auth';
 import uploadRoutes from './api/upload';
 import exportRoutes from './api/export';
+import seedRoutes from './api/seed';
 import { testEmailConnection } from './utils/emailService';
 import './config/database'; // Force Railway database configuration
 
@@ -76,6 +77,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/export', exportRoutes);
+app.use('/api/admin', seedRoutes);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
