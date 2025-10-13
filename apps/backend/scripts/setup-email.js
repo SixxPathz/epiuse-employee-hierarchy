@@ -1,0 +1,45 @@
+#!/usr/bin/env node
+
+console.log('📧 EMAIL SETUP GUIDE - Gmail Configuration');
+console.log('==========================================\n');
+
+console.log('To enable email sending for password resets, you need to set up Gmail App Passwords:');
+console.log('');
+console.log('STEP 1: Enable 2-Factor Authentication on your Gmail account');
+console.log('   → Go to: https://myaccount.google.com/security');
+console.log('   → Click "2-Step Verification" and follow the setup');
+console.log('');
+console.log('STEP 2: Generate an App Password');
+console.log('   → Go to: https://myaccount.google.com/apppasswords');
+console.log('   → Select "Mail" and "Other (custom name)"');
+console.log('   → Enter "EPI-USE Employee Portal" as the name');
+console.log('   → Copy the 16-character password (no spaces)');
+console.log('');
+console.log('STEP 3: Update your .env file');
+console.log('   → Replace "your-email@gmail.com" with your Gmail address');
+console.log('   → Replace "your-app-password" with the App Password from Step 2');
+console.log('');
+console.log('Example .env configuration:');
+console.log('   EMAIL_USER=john.doe@gmail.com');
+console.log('   EMAIL_APP_PASSWORD=abcdlefghijklmno');
+console.log('');
+console.log('STEP 4: Restart your backend server');
+console.log('   → Stop the current server (Ctrl+C)');
+console.log('   → Run: npm run dev');
+console.log('');
+console.log('⚠️  SECURITY NOTES:');
+console.log('   • Never share your App Password');
+console.log('   • The App Password is different from your Gmail password');
+console.log('   • You can revoke App Passwords anytime from Google settings');
+console.log('   • Add .env to .gitignore to keep credentials secure');
+console.log('');
+console.log('🧪 TESTING:');
+console.log('   After setup, use the forgot password form in your app.');
+console.log('   Check the backend console for email status messages.');
+console.log('');
+console.log('❓ TROUBLESHOOTING:');
+console.log('   • If emails don\'t send, check the backend console for error messages');
+console.log('   • Verify your Gmail address and App Password are correct');
+console.log('   • Make sure 2FA is enabled on your Google account');
+console.log('   • Try generating a new App Password if needed');
+console.log('');

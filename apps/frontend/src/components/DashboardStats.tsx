@@ -1,0 +1,157 @@
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import {
+  UsersIcon,
+  BanknotesIcon,
+  ChartBarIcon,
+  UserGroupIcon,
+} from '@heroicons/react/24/outline';
+import api from '../utils/api';
+import { formatCurrency } from '../utils/helpers';
+import { getUserPermissions } from '../utils/permissions';
+import { User } from '../types';
+
+interface DashboardStatsProps {
+  user?: User;
+}
+
+export default function DashboardStats({ user }: DashboardStatsProps) {
+  // Get user permissions
+  const permissions = getUserPermissions(user?.role || 'EMPLOYEE');
+  
+  // Helper function to format department names
+  const formatDepartmentName = (dept: string): string => {
+    return dept
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+  
+  const { data: insights, isLoading } = useQuery({
+    queryKey: ['dashboard-stats'],
+    queryFn: async () => {
+      const response = await api.get('/employees/stats/dashboard');
+      return response.data;
+    },
+  });
+
+  const stats = [
+    {
+      name: 'Total Employees',
+      value: insights?.totalEmployees || 0,
+      icon: UsersIcon,
+      color: 'text-company-navy',
+      bgColor: 'bg-gray-50',
+    },
+    // Only show salary stats to users who can view salaries
+    ...(permissions.canViewSalaries ? [{
+      name: 'Average Salary',
+      value: insights?.avgSalaryByPosition?.length 
+        ? formatCurrency(insights.avgSalaryByPosition[0]._avg.salary)
+        : formatCurrency(0),
+      icon: BanknotesIcon,
+      color: 'text-company-red',
+      bgColor: 'bg-gray-50',
+    }] : []),
+    {
+      name: 'Managers',
+      value: insights?.managementRatio?.totalManagers || 0,
+      icon: UserGroupIcon,
+      color: 'text-company-navy',
+      bgColor: 'bg-gray-50',
+    },
+    {
+      name: 'Management Ratio',
+      value: insights?.managementRatio?.ratio 
+        ? `${insights.managementRatio.ratio.toFixed(1)}%`
+        : '0%',
+      icon: ChartBarIcon,
+      color: 'text-company-red',
+      bgColor: 'bg-gray-50',
+    },
+  ];
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="card animate-pulse">
+            <div className="card-body">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="h-8 w-8 bg-gray-200 rounded"></div>
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-6 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat) => (
+          <div key={stat.name} className="card hover:shadow-medium transition-shadow duration-200">
+            <div className="card-body">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className={`p-2 ${stat.bgColor} rounded-lg`}>
+                    <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                  </div>
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">
+                      {stat.name}
+                    </dt>
+                    <dd className="text-lg font-semibold text-gray-900">
+                      {stat.value}
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Department Distribution */}
+      {insights?.departmentDistribution && (
+        <div className="card">
+          <div className="card-header">
+            <h3 className="text-lg font-semibold text-gray-900">Department Distribution</h3>
+          </div>
+          <div className="card-body">
+            <div className="space-y-4">
+              {insights.departmentDistribution.map((dept: any, index: number) => (
+                <div key={dept.name} className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">
+                    {formatDepartmentName(dept.name)}
+                  </span>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-24 bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-company-red h-2 rounded-full"
+                        style={{
+                          width: `${(dept.count / insights.departmentDistribution.reduce((sum: number, d: any) => sum + d.count, 0)) * 100}%`,
+                        }}
+                      ></div>
+                    </div>
+                    <span className="text-sm text-gray-600">{dept.count}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

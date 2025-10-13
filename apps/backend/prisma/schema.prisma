@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ma/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    String   @id @default(cuid())
+  email                 String   @unique
+  password              String
+  role                  Role     @default(EMPLOYEE)
+  mustChangePassword    Boolean  @default(true)
+  resetToken            String?
+  resetTokenExpiry      DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Relation to employee
+  employee Employee?
+
+  @@map("users")
+}
+
+model Employee {
+  id             String    @id @default(cuid())
+  firstName      String
+  lastName       String
+  email          String    @unique
+  birthDate      DateTime
+  employeeNumber String    @unique
+  salary         Float
+  position       String
+  department     String    // Department field added
+  managerId      String?
+  profilePicture String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Self-referential relation for manager/subordinate
+  manager        Employee?  @relation("ManagerSubordinate", fields: [managerId], references: [id])
+  subordinates   Employee[] @relation("ManagerSubordinate")
+
+  // One-to-one relation with User
+  user           User?      @relation(fields: [email], references: [email])
+
+  @@map("employees")
+}
+
+// Enums
+enum Role {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}

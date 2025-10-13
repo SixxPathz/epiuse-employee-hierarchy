@@ -1,0 +1,224 @@
+import { useState, useEffect } from 'react';
+import Head from 'next/head';
+import { useRouter } from 'next/router';
+import Layout from '../components/Layout';
+import PasswordChangeModal from '../components/PasswordChangeModal';
+import { User } from '../types';
+import { KeyIcon } from '@heroicons/react/24/outline';
+
+export default function SettingsPage() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [settings, setSettings] = useState({
+    companyName: 'EPI-USE',
+    currency: 'ZAR',
+    timezone: 'Africa/Johannesburg',
+    language: 'en-ZA',
+    emailNotifications: true,
+    auditRetention: 365,
+  });
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem('auth_token');
+    const userData = localStorage.getItem('user');
+    
+    if (!token || !userData) {
+      router.push('/auth/login');
+      return;
+    }
+
+    try {
+      const parsedUser = JSON.parse(userData);
+      setUser(parsedUser);
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      router.push('/auth/login');
+    } finally {
+      setLoading(false);
+    }
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-company-navy"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  const handleSave = () => {
+    // In a real app, you'd save these to the backend
+    alert('Settings saved successfully!');
+  };
+
+  // Only show settings for ADMIN users
+  if (user.role !== 'ADMIN') {
+    return (
+      <>
+        <Head>
+          <title>Settings - EPI-USE Nexus</title>
+          <meta name="description" content="Configure your system settings" />
+        </Head>
+        <Layout user={user}>
+          <div className="space-y-6">
+            <div className="card">
+              <div className="card-body text-center">
+                <h2 className="text-xl font-semibold text-gray-900">Access Restricted</h2>
+                <p className="text-gray-600 mt-2">
+                  Only administrators can access system settings.
+                </p>
+              </div>
+            </div>
+          </div>
+        </Layout>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Head>
+        <title>Settings - EPI-USE Nexus</title>
+        <meta name="description" content="Configure your system settings" />
+      </Head>
+      <Layout user={user}>
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">System Settings</h1>
+            <p className="text-gray-600">Configure your organization's system preferences.</p>
+          </div>
+
+          <div className="card">
+            <div className="card-header">
+              <h3 className="text-lg font-semibold text-gray-900">Company Information</h3>
+            </div>
+            <div className="card-body space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Company Name
+                </label>
+                <input
+                  type="text"
+                  value={settings.companyName}
+                  onChange={(e) => setSettings({...settings, companyName: e.target.value})}
+                  className="input-field"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Default Currency
+                </label>
+                <select
+                  value={settings.currency}
+                  onChange={(e) => setSettings({...settings, currency: e.target.value})}
+                  className="input-field"
+                >
+                  <option value="ZAR">South African Rand (ZAR)</option>
+                  <option value="USD">US Dollar (USD)</option>
+                  <option value="EUR">Euro (EUR)</option>
+                  <option value="GBP">British Pound (GBP)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Timezone
+                </label>
+                <select
+                  value={settings.timezone}
+                  onChange={(e) => setSettings({...settings, timezone: e.target.value})}
+                  className="input-field"
+                >
+                  <option value="Africa/Johannesburg">Africa/Johannesburg</option>
+                  <option value="Africa/Cape_Town">Africa/Cape_Town</option>
+                  <option value="UTC">UTC</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-header">
+              <h3 className="text-lg font-semibold text-gray-900">Security Settings</h3>
+            </div>
+            <div className="card-body">
+              <div className="flex items-center justify-between py-4">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900">Password</h4>
+                  <p className="text-sm text-gray-500">Update your account password</p>
+                </div>
+                <button
+                  onClick={() => setShowPasswordModal(true)}
+                  className="flex items-center px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  <KeyIcon className="h-4 w-4 mr-2" />
+                  Change Password
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-header">
+              <h3 className="text-lg font-semibold text-gray-900">System Preferences</h3>
+            </div>
+            <div className="card-body space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Email Notifications
+                  </label>
+                  <p className="text-sm text-gray-500">Receive email notifications for important events</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={settings.emailNotifications}
+                  onChange={(e) => setSettings({...settings, emailNotifications: e.target.checked})}
+                  className="h-4 w-4 text-company-navy border-gray-300 rounded focus:ring-company-navy"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Audit Log Retention (Days)
+                </label>
+                <input
+                  type="number"
+                  value={settings.auditRetention}
+                  onChange={(e) => setSettings({...settings, auditRetention: parseInt(e.target.value)})}
+                  className="input-field"
+                  min="30"
+                  max="2555"
+                />
+                <p className="text-sm text-gray-500 mt-1">How long to keep audit logs (30-2555 days)</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              onClick={handleSave}
+              className="btn-primary"
+            >
+              Save Settings
+            </button>
+          </div>
+        </div>
+        
+        {/* Password Change Modal */}
+        <PasswordChangeModal
+          isOpen={showPasswordModal}
+          onClose={() => setShowPasswordModal(false)}
+          isFirstLogin={false}
+        />
+      </Layout>
+    </>
+  );
+}
