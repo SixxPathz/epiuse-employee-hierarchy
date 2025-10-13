@@ -135,7 +135,7 @@ export default function ProfilePage() {
         birthDate: new Date(data.birthDate).toISOString(),
       };
 
-  const response = await api.put(`/employees/${user.employee.id}`, updateFields);
+  const response = await api.put(`/api/employees/${user.employee.id}`, updateFields);
 
       // Update user data in localStorage
       const updatedUser = {
@@ -163,7 +163,7 @@ export default function ProfilePage() {
   const onSubmitPassword = async (data: PasswordFormData) => {
     setIsChangingPassword(true);
     try {
-      await api.post('/auth/change-password', {
+      await api.post('/api/auth/change-password', {
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
       });
@@ -189,7 +189,7 @@ export default function ProfilePage() {
   const currentUser = currentUserData ? JSON.parse(currentUserData) : user;
 
       // Fetch updated user data from server
-  const response = await api.get(`/employees/${user.employee.id}`);
+  const response = await api.get(`/api/employees/${user.employee.id}`);
       const updatedEmployee = response.data.employee;
 
       // Update user object, but preserve the profile picture from localStorage if it's newer

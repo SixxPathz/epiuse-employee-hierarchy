@@ -30,7 +30,7 @@ export default function DashboardStats({ user }: DashboardStatsProps) {
   const { data: insights, isLoading } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
-      const response = await api.get('/employees/stats/dashboard');
+      const response = await api.get('/api/employees/stats/dashboard');
       return response.data;
     },
   });

@@ -50,7 +50,7 @@ export default function ProfilePictureUpload({ user, onUpdate }: ProfilePictureU
       const formData = new FormData();
       formData.append('profilePicture', file);
       
-      const response = await api.post('/upload/profile-picture', formData, {
+      const response = await api.post('/api/upload/profile-picture', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -99,7 +99,7 @@ export default function ProfilePictureUpload({ user, onUpdate }: ProfilePictureU
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      const response = await api.delete('/upload/profile-picture');
+      const response = await api.delete('/api/upload/profile-picture');
       return response.data;
     },
     onSuccess: () => {

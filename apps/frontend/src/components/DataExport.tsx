@@ -37,7 +37,7 @@ export default function DataExport({ user }: DataExportProps) {
   // Export employees as CSV
   const exportEmployeesMutation = useMutation({
     mutationFn: async () => {
-      const response = await api.get('/export/employees/csv', {
+      const response = await api.get('/api/export/employees/csv', {
         responseType: 'blob'
       });
       return response;
@@ -59,7 +59,7 @@ export default function DataExport({ user }: DataExportProps) {
   // Export hierarchy as JSON
   const exportHierarchyMutation = useMutation({
     mutationFn: async () => {
-      const response = await api.get('/export/hierarchy/json', {
+      const response = await api.get('/api/export/hierarchy/json', {
         responseType: 'blob'
       });
       return response;

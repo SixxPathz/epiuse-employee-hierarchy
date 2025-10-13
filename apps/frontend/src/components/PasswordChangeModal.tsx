@@ -53,7 +53,7 @@ export default function PasswordChangeModal({
 
   const changePasswordMutation = useMutation({
     mutationFn: async (data: { currentPassword: string; newPassword: string }) => {
-      const response = await api.post('/auth/change-password', data);
+      const response = await api.post('/api/auth/change-password', data);
       return response.data;
     },
     onSuccess: () => {

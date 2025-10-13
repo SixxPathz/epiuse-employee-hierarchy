@@ -13,7 +13,7 @@ export default function ForgotPassword() {
     setIsLoading(true);
     
     try {
-      const response = await api.post('/auth/forgot-password', { email });
+      const response = await api.post('/api/auth/forgot-password', { email });
       
       if (response.status === 200) {
         setSubmitted(true);

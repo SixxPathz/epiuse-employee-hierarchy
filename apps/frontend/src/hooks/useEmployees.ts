@@ -65,7 +65,7 @@ export const useEmployees = (
   return useQuery({
     queryKey: queryKeys.employeesList(params),
     queryFn: async (): Promise<EmployeesResponse> => {
-      const response = await api.get('/employees', { params });
+      const response = await api.get('/api/employees', { params });
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh
@@ -84,7 +84,7 @@ export const useInfiniteEmployees = (
   return useInfiniteQuery<EmployeesResponse>({
     queryKey: queryKeys.employeesInfinite(params),
     queryFn: async ({ pageParam = 1 }): Promise<EmployeesResponse> => {
-      const response = await api.get('/employees', { params: { ...params, page: pageParam, limit: params.limit ?? 50 } });
+      const response = await api.get('/api/employees', { params: { ...params, page: pageParam, limit: params.limit ?? 50 } });
       return response.data;
     },
     initialPageParam: 1,
@@ -106,7 +106,7 @@ export const useEmployee = (id: string, options?: Partial<UseQueryOptions<Employ
   return useQuery({
     queryKey: queryKeys.employee(id),
     queryFn: async (): Promise<Employee> => {
-      const response = await api.get(`/employees/${id}`);
+      const response = await api.get(`/api/employees/${id}`);
       return response.data;
     },
     enabled: !!id,
@@ -140,7 +140,7 @@ export const useHierarchyTree = (options?: Partial<UseQueryOptions<HierarchyTree
   return useQuery({
     queryKey: queryKeys.hierarchyTree,
     queryFn: async (): Promise<HierarchyTreeResponse> => {
-      const response = await api.get('/employees/hierarchy/tree');
+      const response = await api.get('/api/employees/hierarchy/tree');
       return response.data;
     },
     staleTime: 10 * 60 * 1000, // 10 minutes - hierarchy changes less frequently
@@ -154,7 +154,7 @@ export const useDashboardStats = (options?: Partial<UseQueryOptions<DashboardSta
   return useQuery({
     queryKey: queryKeys.dashboardStats,
     queryFn: async (): Promise<DashboardStatsResponse> => {
-      const response = await api.get('/employees/stats/dashboard');
+      const response = await api.get('/api/employees/stats/dashboard');
       return response.data;
     },
     staleTime: 2 * 60 * 1000, // 2 minutes - stats should be relatively fresh
@@ -238,7 +238,7 @@ export const useAddEmployee = () => {
 
   return useMutation({
     mutationFn: async (data: any) => {
-      const response = await api.post('/employees', {
+      const response = await api.post('/api/employees', {
         ...data,
         birthDate: new Date(data.birthDate).toISOString(),
       });
@@ -259,7 +259,7 @@ export const useUpdateEmployee = () => {
   return useMutation({
     mutationFn: async (data: any) => {
       const { id, ...updateData } = data;
-      const response = await api.put(`/employees/${id}`, {
+      const response = await api.put(`/api/employees/${id}`, {
         ...updateData,
         birthDate: new Date(updateData.birthDate).toISOString(),
       });
@@ -279,7 +279,7 @@ export const useDeleteEmployee = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      await api.delete(`/employees/${id}`);
+      await api.delete(`/api/employees/${id}`);
       return id;
     },
     onSuccess: () => {
@@ -299,7 +299,7 @@ export const usePrefetchEmployee = () => {
     queryClient.prefetchQuery({
       queryKey: queryKeys.employee(id),
       queryFn: async () => {
-        const response = await api.get(`/employees/${id}`);
+        const response = await api.get(`/api/employees/${id}`);
         return response.data;
       },
       staleTime: 5 * 60 * 1000,
@@ -314,7 +314,7 @@ export const usePrefetchEmployees = () => {
     queryClient.prefetchQuery({
       queryKey: queryKeys.employeesList(params),
       queryFn: async () => {
-        const response = await api.get('/employees', { params });
+        const response = await api.get('/api/employees', { params });
         return response.data;
       },
       staleTime: 5 * 60 * 1000,

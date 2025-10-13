@@ -18,7 +18,7 @@ export default function OrganizationChart() {
   const { data: hierarchy, isLoading } = useQuery({
     queryKey: ['hierarchy'],
     queryFn: async () => {
-      const response = await api.get('/employees/hierarchy/tree');
+      const response = await api.get('/api/employees/hierarchy/tree');
       return response.data.hierarchy;
     },
   });
