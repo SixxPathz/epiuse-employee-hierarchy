@@ -24,6 +24,13 @@
   to = "/index.html"
   status = 200
 
+# API proxy to Railway backend
+[[redirects]]
+  from = "/api/*"
+  to = "https://epiuse-employee-hierarchy-production.up.railway.app/api/:splat"
+  status = 200
+  force = true
+
 # Headers for security
 [[headers]]
   for = "/*"

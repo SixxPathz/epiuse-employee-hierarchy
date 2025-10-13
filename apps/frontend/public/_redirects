@@ -3,7 +3,7 @@
 /*    /index.html   200
 
 # API proxy to Railway backend  
-/api/*  https://your-railway-backend.up.railway.app/api/:splat  200
+/api/*  https://epiuse-employee-hierarchy-production.up.railway.app/api/:splat  200
 
 # Security headers
 /*

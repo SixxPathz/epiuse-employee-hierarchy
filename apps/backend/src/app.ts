@@ -51,7 +51,11 @@ app.use(helmet({
   },
 }));
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: [
+    'http://localhost:3000', // Development
+    process.env.FRONTEND_URL || 'http://localhost:3000', // Production Netlify URL
+    /\.netlify\.app$/, // Allow all Netlify domains
+  ],
   credentials: true
 }));
 
