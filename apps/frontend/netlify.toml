@@ -1,7 +1,4 @@
 [build]
-  # Base directory for the project
-  base = "apps/frontend"
-  
   # Build command - Next.js 14 with server-side rendering
   command = "npm ci && npm run build"
   
@@ -9,13 +6,9 @@
   publish = ".next"
 
 [build.environment]
-  # Node.js version - Updated for Prisma compatibility
+  # Node.js version
   NODE_VERSION = "18.20.4"
-  
-  # NPM version  
   NPM_VERSION = "10.7.0"
-  
-  # Production environment
   NODE_ENV = "production"
 
 # API proxy to Railway backend

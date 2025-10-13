@@ -1,12 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable static export for Netlify
-  output: 'export',
-  trailingSlash: true,
-  skipTrailingSlashRedirect: true,
-  distDir: 'out',
+  // Remove static export - use server-side rendering for Netlify
   images: {
-    unoptimized: true,
     domains: ['www.gravatar.com', 'gravatar.com', 'localhost'],
     remotePatterns: [
       {
