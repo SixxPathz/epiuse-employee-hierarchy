@@ -170,7 +170,32 @@ After getting your Netlify URL, update Railway backend:
 
 ## Step 4: Initialize Database (One-time)
 
-Run migrations on your Railway database:
+### 4.1 Seed Production Database
+
+After Railway deployment completes, seed your production database with test users:
+
+```bash
+# Replace YOUR-RAILWAY-URL with your actual Railway backend URL
+curl -X POST https://YOUR-RAILWAY-URL.up.railway.app/api/admin/seed-production \
+  -H "Content-Type: application/json" \
+  -H "x-seed-secret: epiuse-seed-2025" \
+  -d '{}'
+```
+
+### 4.2 Test Login Credentials
+
+After seeding, you can log in with these accounts:
+
+| **Role** | **Email** | **Password** | **Access Level** |
+|----------|-----------|--------------|------------------|
+| **Admin** | `admin@epiuse.com` | `securepassword123` | Full admin access |
+| **CEO** | `thabo.mthembu@epiuse.com` | `securepassword123` | Admin access |
+| **Manager** | `sipho.ngcobo@epiuse.com` | `securepassword123` | Manager access |
+| **Employee** | `kagiso.morake@epiuse.com` | `securepassword123` | Employee access |
+
+### 4.3 Alternative: Local Migration (Advanced)
+
+If you prefer to run migrations locally:
 
 ```bash
 # In your local apps/backend directory
@@ -180,7 +205,7 @@ Run migrations on your Railway database:
 # Run migrations
 npm run prisma:migrate
 
-# Optional: Seed with sample data
+# Seed with sample data
 npm run prisma:seed
 ```
 
