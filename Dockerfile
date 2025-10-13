@@ -8,9 +8,9 @@ WORKDIR /app
 COPY apps/backend/package*.json ./apps/backend/
 COPY apps/frontend/package*.json ./apps/frontend/
 
-# Install dependencies
-RUN cd apps/backend && npm ci --only=production
-RUN cd apps/frontend && npm ci --only=production
+# Install ALL dependencies first (including devDependencies for build)
+RUN cd apps/backend && npm ci
+RUN cd apps/frontend && npm ci
 
 # Copy source code
 COPY apps/backend ./apps/backend
@@ -19,6 +19,10 @@ COPY apps/frontend ./apps/frontend
 # Build applications
 RUN cd apps/backend && npm run build
 RUN cd apps/frontend && npm run build
+
+# Remove devDependencies after build
+RUN cd apps/backend && npm prune --production
+RUN cd apps/frontend && npm prune --production
 
 # Production stage
 FROM node:18-alpine AS production
