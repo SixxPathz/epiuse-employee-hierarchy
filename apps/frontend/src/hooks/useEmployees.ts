@@ -169,7 +169,7 @@ export const useCurrentUser = (options?: Partial<UseQueryOptions<User>>) => {
   return useQuery<User>({
     queryKey: queryKeys.currentUser,
     queryFn: async (): Promise<User> => {
-      const response = await api.get('/auth/me');
+      const response = await api.get('/api/auth/me');
       // Backend returns { user: {...} }, but be defensive in case it's already the user
       const user = (response.data && (response.data.user ?? response.data)) as User;
       return user;
@@ -215,7 +215,7 @@ export const useLogin = () => {
 
   return useMutation({
     mutationFn: async (credentials: { email: string; password: string }) => {
-      const response = await api.post('/auth/login', credentials);
+      const response = await api.post('/api/auth/login', credentials);
       return response.data;
     },
     onSuccess: (data) => {
