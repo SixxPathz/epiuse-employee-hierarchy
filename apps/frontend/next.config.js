@@ -1,12 +1,20 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'export',
+  trailingSlash: true,
   images: {
+    unoptimized: true,
     domains: ['www.gravatar.com', 'gravatar.com', 'localhost'],
     remotePatterns: [
       {
         protocol: 'http',
         hostname: 'localhost',
         port: '5000',
+        pathname: '/api/upload/profile-picture/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.up.railway.app',
         pathname: '/api/upload/profile-picture/**',
       },
     ],

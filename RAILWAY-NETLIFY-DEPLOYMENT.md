@@ -122,7 +122,7 @@ FRONTEND_URL=https://your-netlify-site.netlify.app
 2. **Build Settings** (VERY IMPORTANT):
    - **Base Directory**: `apps/frontend` ⚠️ Type this exactly
    - **Build Command**: `npm run build`
-   - **Publish Directory**: `apps/frontend/.next` ⚠️ Type this exactly
+   - **Publish Directory**: `apps/frontend/out` ⚠️ Type this exactly (NOT .next)
    
 3. **Click "Deploy Site"** (don't worry about environment variables yet)
 
