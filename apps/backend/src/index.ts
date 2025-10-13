@@ -9,7 +9,10 @@ import { authRoutes } from './api/auth';
 import uploadRoutes from './api/upload';
 import exportRoutes from './api/export';
 
-dotenv.config();
+// Load environment variables (Railway production will ignore this, local dev will use .env)
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config();
+}
 
 const app = express();
 

@@ -14,12 +14,12 @@ import './config/database'; // Force Railway database configuration
 
 // Validate critical environment variables
 if (!process.env.DATABASE_URL) {
-  console.error('❌ DATABASE_URL is not set in .env file');
+  console.error('❌ DATABASE_URL is not set in environment variables');
   process.exit(1);
 }
 
 if (!process.env.JWT_SECRET) {
-  console.error('❌ JWT_SECRET is not set in .env file');
+  console.error('❌ JWT_SECRET is not set in environment variables');
   process.exit(1);
 }
 

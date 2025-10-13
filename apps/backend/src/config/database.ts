@@ -1,33 +1,48 @@
 /**
- * PERMANENT DATABASE CONFIGURATION
- * This file ensures Railway PostgreSQL is used exclusively
- * and prevents any interference from system environment variables
+ * FLEXIBLE DATABASE CONFIGURATION
+ * This file works with both Railway production (env vars) and local development (.env file)
  */
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 
-// Force load environment from .env file ONLY
+// Load environment configuration (Railway production OR local .env)
 const loadRailwayConfig = () => {
   const envPath = path.resolve(process.cwd(), '.env');
   
-  if (!fs.existsSync(envPath)) {
-    throw new Error('❌ .env file not found. Please ensure .env exists with Railway DATABASE_URL');
+  // In Railway production, use environment variables directly
+  if (process.env.NODE_ENV === 'production' && process.env.DATABASE_URL) {
+    console.log('✅ Using Railway production environment variables');
+    return process.env.DATABASE_URL;
   }
-
-  // Parse .env file directly
-  const envConfig = dotenv.parse(fs.readFileSync(envPath));
   
-  // CRITICAL: Override ANY system environment variables with .env values
-  Object.keys(envConfig).forEach(key => {
-    process.env[key] = envConfig[key];
-  });
+  // For local development, load from .env file
+  if (fs.existsSync(envPath)) {
+    console.log('📁 Loading local .env file for development');
+    const envConfig = dotenv.parse(fs.readFileSync(envPath));
+    
+    // Override system environment variables with .env values for local dev
+    Object.keys(envConfig).forEach(key => {
+      process.env[key] = envConfig[key];
+    });
+    
+    const databaseUrl = envConfig.DATABASE_URL;
+    if (!databaseUrl) {
+      throw new Error('❌ DATABASE_URL not found in .env file');
+    }
+    return databaseUrl;
+  }
+  
+  // Neither production env vars nor .env file found
+  throw new Error('❌ No database configuration found. Need either Railway env vars or .env file');
+};
 
-  // Validate Railway DATABASE_URL
-  const databaseUrl = envConfig.DATABASE_URL;
+// Validate and get database URL
+const getDatabaseUrl = (): string => {
+  const databaseUrl = loadRailwayConfig();
   
   if (!databaseUrl) {
-    throw new Error('❌ DATABASE_URL not found in .env file');
+    throw new Error('❌ DATABASE_URL not found');
   }
 
   if (!databaseUrl.startsWith('postgresql://')) {
@@ -50,8 +65,14 @@ const loadRailwayConfig = () => {
 
 // Export the validated Railway database URL
 export const getRailwayDatabaseUrl = (): string => {
-  return loadRailwayConfig();
+  return getDatabaseUrl();
 };
 
-// Auto-load on import
-loadRailwayConfig();
+// Auto-load configuration
+try {
+  getDatabaseUrl();
+  console.log('🚀 Database configuration validated');
+} catch (error) {
+  console.error('❌ Database configuration failed:', error instanceof Error ? error.message : String(error));
+  throw error;
+}
