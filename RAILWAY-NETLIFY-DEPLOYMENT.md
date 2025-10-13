@@ -17,26 +17,76 @@ git push origin main
 ```
 
 ### 1.2 Create Railway Service
-1. Go to [Railway Dashboard](https://railway.app)
-2. Click "New Project" → "Deploy from GitHub repo"
-3. Select your repository: `SixxPathz/epiuse-employee-hierarchy`
-4. **Important**: Set **Root Directory** to `apps/backend`
+
+#### Step-by-Step Railway Setup:
+
+1. **Go to Railway Dashboard**: Open https://railway.app in your browser
+2. **Sign in**: Use your GitHub account to sign in
+3. **Create New Project**: 
+   - Click the big **"New Project"** button
+   - Select **"Deploy from GitHub repo"**
+   
+4. **Select Repository**:
+   - Find and click on `SixxPathz/epiuse-employee-hierarchy`
+   - Railway will start importing your repository
+
+5. **Configure Service** (CRITICAL STEP):
+   - After import, Railway will show your project dashboard
+   - You'll see a service created (might be called "epiuse-employee-hierarchy")
+   - **Click on your service** to open its settings
+   
+6. **Set Root Directory** (THIS IS THE KEY STEP):
+   - In your service dashboard, look for **"Settings"** tab at the top
+   - Click **"Settings"**
+   - Scroll down to find **"Source"** section
+   - Look for **"Root Directory"** field
+   - **Enter exactly**: `apps/backend`
+   - Click **"Save"** or it might auto-save
+   
+7. **Verify Configuration**:
+   - Go back to the **"Deployments"** tab
+   - Railway should now rebuild using only the backend folder
+   - The build logs should show it's working in `/apps/backend`
 
 ### 1.3 Configure Environment Variables
-In Railway dashboard → Your service → Variables tab:
+
+#### Step-by-Step Environment Setup:
+
+1. **Access Variables**:
+   - In your Railway service dashboard, click the **"Variables"** tab
+   - You'll see a form to add new environment variables
+
+2. **Add Each Variable** (Click "Add Variable" for each one):
 
 ```env
-DATABASE_URL=${{Postgres.DATABASE_URL}}
-JWT_SECRET=your_super_secret_jwt_key_minimum_32_characters_long
-NEXTAUTH_SECRET=another_super_secret_key_minimum_32_characters_long
+DATABASE_URL=postgresql://postgres:WIlbTptekRaSpDPGxUPxrDGpeSFDhlVS@switchyard.proxy.rlwy.net:11405/railway
+JWT_SECRET=c8f2d7a1e5b3f6c9d4a8b0e1f7c3d2a5b9e6f1d0c4a7b3e8f2d1c6a9b0e5f3d7
+NEXTAUTH_SECRET=9f4a7c2e6b1d8f3a5c0e7d9b2a6f4c1e8d3b7a0f5c9e2d1b6a8f3c0e7d4b1a9f2
 NODE_ENV=production
 PORT=5000
+AI_API_KEY=AdvYMJkv1vO5NKws64vw1IDjdekQvLgQ
+AI_AGENT_URL=https://yf3setptzah4zwyou2rr2now.agents.do-ai.run
+EMAIL_USER=dsandile58@gmail.com
+EMAIL_APP_PASSWORD=wjnvuguhbqcdpnde
 FRONTEND_URL=https://your-netlify-site.netlify.app
 ```
 
-**Key Points**:
-- `${{Postgres.DATABASE_URL}}` automatically connects to your existing PostgreSQL
+3. **How to Add Each Variable**:
+   - Variable Name: `DATABASE_URL`
+   - Variable Value: `postgresql://postgres:WIlbTptekRaSpDPGxUPxrDGpeSFDhlVS@switchyard.proxy.rlwy.net:11405/railway`
+   - Click "Add"
+   
+   - Variable Name: `JWT_SECRET`
+   - Variable Value: `c8f2d7a1e5b3f6c9d4a8b0e1f7c3d2a5b9e6f1d0c4a7b3e8f2d1c6a9b0e5f3d7`
+   - Click "Add"
+   
+   *(Repeat for all variables above)*
+
+**Important Notes**:
+- Use your existing DATABASE_URL (Railway PostgreSQL connection)
+- Change `NODE_ENV` from `development` to `production`
 - You'll update `FRONTEND_URL` after deploying to Netlify (Step 2)
+- All your existing secrets and API keys are preserved
 
 ### 1.4 Deploy & Get URL
 - Railway will automatically build and deploy
@@ -48,23 +98,56 @@ FRONTEND_URL=https://your-netlify-site.netlify.app
 ## Step 2: Deploy Frontend to Netlify
 
 ### 2.1 Create Netlify Site
-1. Go to [Netlify](https://app.netlify.com)
-2. "Add new site" → "Import an existing project"
-3. Connect GitHub → Select `SixxPathz/epiuse-employee-hierarchy`
+
+#### Step-by-Step Netlify Setup:
+
+1. **Go to Netlify**: Open https://app.netlify.com in your browser
+2. **Sign In**: Use your GitHub account to sign in
+3. **Create New Site**:
+   - Click **"Add new site"** button
+   - Select **"Import an existing project"**
+4. **Connect GitHub**:
+   - Click **"Deploy with GitHub"**
+   - Find and select `SixxPathz/epiuse-employee-hierarchy`
+   - Click on your repository
 
 ### 2.2 Configure Build Settings
-- **Base directory**: `apps/frontend`
-- **Build command**: `npm run build`
-- **Publish directory**: `apps/frontend/.next`
+
+#### CRITICAL: Set These Exact Settings:
+
+1. **Site Settings Form** (you'll see this after selecting your repo):
+   - **Owner**: SixxPathz (auto-selected)
+   - **Branch to deploy**: `main` (auto-selected)
+   
+2. **Build Settings** (VERY IMPORTANT):
+   - **Base Directory**: `apps/frontend` ⚠️ Type this exactly
+   - **Build Command**: `npm run build`
+   - **Publish Directory**: `apps/frontend/.next` ⚠️ Type this exactly
+   
+3. **Click "Deploy Site"** (don't worry about environment variables yet)
 
 ### 2.3 Set Environment Variables
-In Netlify → Site settings → Environment variables:
+
+#### After Initial Deployment:
+
+1. **Get Your Backend URL**: 
+   - Go back to Railway dashboard
+   - Copy your backend URL (looks like: `https://your-backend-abc123.up.railway.app`)
+
+2. **Configure Netlify Variables**:
+   - In Netlify dashboard, go to **"Site settings"**
+   - Click **"Environment variables"** in the left sidebar
+   - Click **"Add variable"** for each:
 
 ```env
-NEXT_PUBLIC_API_URL=https://your-railway-backend-url.up.railway.app
-NEXTAUTH_URL=https://your-netlify-site.netlify.app
-NEXTAUTH_SECRET=same_secret_as_your_backend
+NEXT_PUBLIC_API_URL=https://your-actual-railway-backend-url.up.railway.app
+NEXTAUTH_URL=https://your-actual-netlify-site.netlify.app
+NEXTAUTH_SECRET=9f4a7c2e6b1d8f3a5c0e7d9b2a6f4c1e8d3b7a0f5c9e2d1b6a8f3c0e7d4b1a9f2
 ```
+
+3. **Replace URLs with Your Actual URLs**:
+   - Replace `your-actual-railway-backend-url` with your Railway URL
+   - Replace `your-actual-netlify-site` with your Netlify URL
 
 ### 2.4 Deploy & Get URL
 - Netlify will build and deploy your frontend
@@ -120,19 +203,23 @@ npm run prisma:seed
 
 ### Railway Backend Variables:
 ```env
-DATABASE_URL=${{Postgres.DATABASE_URL}}
-JWT_SECRET=your_32_char_secret
-NEXTAUTH_SECRET=your_32_char_secret  
+DATABASE_URL=postgresql://postgres:WIlbTptekRaSpDPGxUPxrDGpeSFDhlVS@switchyard.proxy.rlwy.net:11405/railway
+JWT_SECRET=c8f2d7a1e5b3f6c9d4a8b0e1f7c3d2a5b9e6f1d0c4a7b3e8f2d1c6a9b0e5f3d7
+NEXTAUTH_SECRET=9f4a7c2e6b1d8f3a5c0e7d9b2a6f4c1e8d3b7a0f5c9e2d1b6a8f3c0e7d4b1a9f2
 NODE_ENV=production
 PORT=5000
-FRONTEND_URL=https://your-netlify-url.netlify.app
+AI_API_KEY=AdvYMJkv1vO5NKws64vw1IDjdekQvLgQ
+AI_AGENT_URL=https://yf3setptzah4zwyou2rr2now.agents.do-ai.run
+EMAIL_USER=dsandile58@gmail.com
+EMAIL_APP_PASSWORD=wjnvuguhbqcdpnde
+FRONTEND_URL=https://your-actual-netlify-url.netlify.app
 ```
 
 ### Netlify Frontend Variables:
 ```env
-NEXT_PUBLIC_API_URL=https://your-railway-url.up.railway.app
-NEXTAUTH_URL=https://your-netlify-url.netlify.app
-NEXTAUTH_SECRET=same_as_backend
+NEXT_PUBLIC_API_URL=https://your-actual-railway-url.up.railway.app
+NEXTAUTH_URL=https://your-actual-netlify-url.netlify.app
+NEXTAUTH_SECRET=9f4a7c2e6b1d8f3a5c0e7d9b2a6f4c1e8d3b7a0f5c9e2d1b6a8f3c0e7d4b1a9f2
 ```
 
 ---
@@ -175,12 +262,127 @@ NEXTAUTH_SECRET=same_as_backend
 - [ ] Mobile responsiveness works
 - [ ] File uploads work (profile pictures)
 
+## Step 6: Update CORS Configuration
+
+Before going live, update your backend CORS settings:
+
+### 6.1 Update Backend CORS
+In `apps/backend/src/app.ts`, update the CORS configuration:
+
+```typescript
+app.use(cors({
+  origin: [
+    'http://localhost:3000', // Development
+    process.env.FRONTEND_URL!, // Production Netlify URL
+  ],
+  credentials: true
+}));
+```
+
+## Step 7: Database Migration & Verification
+
+### 7.1 Verify Migrations Ran
+After Railway deployment:
+1. Check Railway service logs for migration messages
+2. Go to Railway PostgreSQL → Data tab
+3. Verify tables exist: `User`, `Employee`, `_prisma_migrations`
+
+### 7.2 Manual Migration (if needed)
+If migrations didn't run automatically:
+1. In Railway dashboard → your backend service
+2. Add environment variable: `RUN_MIGRATIONS=true`
+3. Trigger a new deployment
+
+## Step 8: Testing Your Deployment
+
+### 8.1 Backend Health Check
+Visit: `https://your-railway-url.up.railway.app/health`
+Should return: `{"status": "ok", "database": "connected"}`
+
+### 8.2 Frontend Testing
+1. Visit your Netlify URL
+2. Test login functionality
+3. Check employee table loads
+4. Test organization chart
+5. Verify search works
+6. Check browser console for errors
+
+### 8.3 API Testing
+```bash
+# Test health endpoint
+curl https://your-railway-url.up.railway.app/health
+
+# Test authentication
+curl -X POST https://your-railway-url.up.railway.app/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@company.com","password":"your-password"}'
+```
+
+## Step 9: Troubleshooting Common Issues
+
+### Backend Issues
+- **Database connection errors**: Verify DATABASE_URL in Railway
+- **CORS errors**: Update FRONTEND_URL to match Netlify domain
+- **Migration errors**: Check Prisma schema syntax
+
+### Frontend Issues
+- **API calls fail**: Verify NEXT_PUBLIC_API_URL points to Railway
+- **Auth errors**: Ensure NEXTAUTH_SECRET matches backend
+- **Build failures**: Check TypeScript errors in Netlify logs
+
+### Quick Fixes
+```bash
+# If you need to redeploy quickly
+git add .
+git commit -m "Fix deployment issue"
+git push origin main
+```
+
+## Step 10: Post-Deployment Checklist
+
+### ✅ Verify Everything Works
+- [ ] Backend health endpoint responds
+- [ ] Database tables created and accessible
+- [ ] User authentication works
+- [ ] Employee data displays correctly
+- [ ] Organization chart renders
+- [ ] Search functionality works
+- [ ] File uploads work (profile pictures)
+- [ ] Role-based permissions function
+- [ ] Mobile responsiveness
+
+### ✅ Security & Performance
+- [ ] HTTPS enabled on both domains
+- [ ] Environment variables secure
+- [ ] Database access restricted
+- [ ] API rate limiting configured
+- [ ] Error handling working
+
 Your EPI-USE Employee Management System is now live! 🎉
 
 ---
 
-## URLs to Save:
-- **Live App**: https://your-netlify-site.netlify.app
-- **API Backend**: https://your-railway-backend.up.railway.app
+## Important URLs to Save
+
+- **Live Application**: https://your-netlify-site.netlify.app
+- **API Backend**: https://your-railway-backend.up.railway.app  
 - **Railway Dashboard**: https://railway.app/dashboard
 - **Netlify Dashboard**: https://app.netlify.com/sites/your-site-name
+- **PostgreSQL Database**: Available in Railway PostgreSQL service
+
+## Next Steps After Deployment
+
+1. **Monitor Performance**: Check Railway and Netlify analytics
+2. **Set Up Alerts**: Configure notifications for downtime
+3. **Regular Backups**: Railway handles this automatically
+4. **Security Updates**: Keep dependencies updated
+5. **User Training**: Prepare documentation for end users
+
+## Support & Maintenance
+
+- **Logs**: Check Railway service logs for backend issues
+- **Analytics**: Use Netlify analytics for frontend insights  
+- **Updates**: Use `git push` to deploy updates automatically
+- **Scaling**: Railway auto-scales based on usage
+
+Your employee hierarchy application is ready for production use!
