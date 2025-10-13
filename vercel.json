@@ -1,0 +1,12 @@
+{
+  "buildCommand": "cd apps/frontend && npm ci && npm run build",
+  "outputDirectory": "apps/frontend/.next",
+  "installCommand": "npm ci",
+  "framework": "nextjs",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://epiuse-employee-hierarchy-production.up.railway.app/api/$1"
+    }
+  ]
+}

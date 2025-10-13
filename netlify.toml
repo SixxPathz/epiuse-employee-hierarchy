@@ -2,11 +2,11 @@
   # Base directory for the project
   base = "apps/frontend"
   
-  # Build command - Next.js 14 with server-side rendering
+  # Build command - Next.js 14 with static export for Netlify
   command = "npm ci && npm run build"
   
-  # Publish directory - Next.js build output for SSR
-  publish = ".next"
+  # Publish directory - Next.js static export output
+  publish = "out"
 
 [build.environment]
   # Node.js version - Updated for Prisma compatibility
@@ -17,6 +17,12 @@
   
   # Production environment
   NODE_ENV = "production"
+
+# Redirect rules for SPA routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
 
 # API proxy to Railway backend
 [[redirects]]

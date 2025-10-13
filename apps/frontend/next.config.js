@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Remove static export - use server-side rendering for Netlify
+  // Full SSR support for Vercel - all functionality restored
   images: {
     domains: ['www.gravatar.com', 'gravatar.com', 'localhost'],
     remotePatterns: [
@@ -22,6 +22,10 @@ const nextConfig = {
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
     NEXT_PUBLIC_SERVER_URL: process.env.NEXT_PUBLIC_SERVER_URL,
+  },
+  // Enable experimental features for better performance
+  experimental: {
+    optimizeCss: true,
   },
 }
 
