@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import {
   HomeIcon,
   UsersIcon,
+  UserIcon,
   ChartBarIcon,
   CogIcon,
   ClockIcon,
@@ -17,6 +18,7 @@ import { getUserPermissions } from '../utils/permissions';
 import { User } from '../types';
 import { generateGravatarUrl, getProfilePictureUrl } from '../utils/helpers';
 import ProfileImage from './ProfileImage';
+import { useLogout } from '../hooks/useEmployees';
 
 interface LayoutProps {
   children: ReactNode;
@@ -27,6 +29,7 @@ export default function Layout({ children, user: initialUser }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState<User | null>(initialUser || null);
   const router = useRouter();
+  const logout = useLogout();
 
   // Early return for loading state when user is explicitly null (not undefined during loading)
   if (initialUser === null) {
@@ -64,9 +67,9 @@ export default function Layout({ children, user: initialUser }: LayoutProps) {
                       <img 
                         src="/logo.png" 
                         alt="EPI-USE Logo" 
-                        className="h-8 w-auto"
+                        className="h-10 w-auto mr-1"
                       />
-                      <span className="text-lg font-bold text-epi-navy">Nexus</span>
+                      <span className="text-2xl font-bold text-epi-navy">Nexus</span>
                     </div>
                     <div className="text-center">
                       <h1 className="text-sm font-semibold text-epi-navy">EPI-USE Employee Portal</h1>
@@ -174,7 +177,7 @@ export default function Layout({ children, user: initialUser }: LayoutProps) {
       requiredPermission: 'canViewEmployees' 
     },
     { name: 'Organization Chart', href: '/org-chart', icon: ChartBarIcon, requiredPermission: 'canViewEmployees' },
-    { name: 'Profile', href: '/profile', icon: UsersIcon, requiredPermission: null },
+    { name: 'Profile', href: '/profile', icon: UserIcon, requiredPermission: null },
     { name: 'Settings', href: '/settings', icon: CogIcon, requiredPermission: null, roles: ['ADMIN'] },
   ];
 
@@ -194,9 +197,7 @@ export default function Layout({ children, user: initialUser }: LayoutProps) {
   });
 
   const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user');
-    router.push('/auth/login');
+    logout();
   };
 
   return (
@@ -223,9 +224,9 @@ export default function Layout({ children, user: initialUser }: LayoutProps) {
                     <img 
                       src="/logo.png" 
                       alt="EPI-USE Logo" 
-                      className="h-8 w-auto"
+                      className="h-10 w-auto mr-1"
                     />
-                    <span className="text-lg font-bold text-epi-navy">Nexus</span>
+                    <span className="text-2xl font-bold text-epi-navy">Nexus</span>
                   </div>
                   {/* Portal name underneath */}
                   <div className="text-center">
@@ -266,9 +267,9 @@ export default function Layout({ children, user: initialUser }: LayoutProps) {
                     <img 
                       src="/logo.png" 
                       alt="EPI-USE Logo" 
-                      className="h-8 w-auto"
+                      className="h-10 w-auto mr-1"
                     />
-                    <span className="text-lg font-bold text-epi-navy">Nexus</span>
+                    <span className="text-2xl font-bold text-epi-navy">Nexus</span>
                   </div>
                   {/* Portal name underneath */}
                   <div className="text-center">

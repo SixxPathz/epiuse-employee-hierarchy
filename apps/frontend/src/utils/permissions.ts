@@ -32,7 +32,7 @@ export function getUserPermissions(role: 'ADMIN' | 'MANAGER' | 'EMPLOYEE'): User
     case 'MANAGER':
       return {
         canViewEmployees: true,
-        canCreateEmployees: false,  // Managers can only edit and view, not add
+        canCreateEmployees: true,  // Managers can add employees to their department
         canEditEmployees: true,
         canDeleteEmployees: false,
         canViewManagers: true,

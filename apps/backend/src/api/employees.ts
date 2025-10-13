@@ -32,6 +32,8 @@ router.get('/', [
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 }),
   query('search').optional().isString(),
+  query('name').optional().isString(),
+  query('employeeNumber').optional().isString(),
   query('position').optional().isString(),
   query('department').optional().isString(),
   query('managerOnly').optional().isBoolean(),
@@ -48,6 +50,8 @@ router.get('/', [
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
     const search = req.query.search as string;
+    const name = req.query.name as string;
+    const employeeNumber = req.query.employeeNumber as string;
     const position = req.query.position as string;
     const department = req.query.department as string;
     const managerOnly = req.query.managerOnly === 'true';
@@ -140,6 +144,7 @@ router.get('/', [
     }
     // ADMIN users see all employees (no additional filtering)
     
+    // Handle general search parameter
     if (search) {
       where.AND = where.AND || [];
       where.AND.push({
@@ -149,6 +154,26 @@ router.get('/', [
           { email: { contains: search, mode: 'insensitive' } },
           { employeeNumber: { contains: search, mode: 'insensitive' } }
         ]
+      });
+    }
+
+    // Handle specific name search parameter
+    if (name) {
+      where.AND = where.AND || [];
+      where.AND.push({
+        OR: [
+          { firstName: { contains: name, mode: 'insensitive' } },
+          { lastName: { contains: name, mode: 'insensitive' } },
+          { email: { contains: name, mode: 'insensitive' } }
+        ]
+      });
+    }
+
+    // Handle specific employee number search parameter
+    if (employeeNumber) {
+      where.AND = where.AND || [];
+      where.AND.push({
+        employeeNumber: { contains: employeeNumber, mode: 'insensitive' }
       });
     }
 

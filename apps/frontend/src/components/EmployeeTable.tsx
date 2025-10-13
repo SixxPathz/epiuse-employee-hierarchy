@@ -47,7 +47,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
   const [searchName, setSearchName] = useState('');
   const [searchEmployeeNumber, setSearchEmployeeNumber] = useState('');
   const [searchPosition, setSearchPosition] = useState('');
-  const [searchManager, setSearchManager] = useState('');
+
   const [selectedDepartment, setSelectedDepartment] = useState('');
   // Infinite scroll replaces classic pagination
   const [sortBy, setSortBy] = useState('firstName');
@@ -67,20 +67,27 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
       .join(' ');
   };
 
-  // Debounce multi-field search
+  // Search params state - now controlled by search button
   const [searchParams, setSearchParams] = useState({});
-  useEffect(() => {
-    const debounceTimer = setTimeout(() => {
-      setSearchParams({
-        name: searchName,
-        employeeNumber: searchEmployeeNumber,
-        position: searchPosition,
-        manager: searchManager,
-        department: selectedDepartment || undefined,
-      });
-    }, 500);
-    return () => clearTimeout(debounceTimer);
-  }, [searchName, searchEmployeeNumber, searchPosition, searchManager, selectedDepartment]);
+  
+  // Handle search button click
+  const handleSearch = () => {
+    setSearchParams({
+      name: searchName || undefined,
+      employeeNumber: searchEmployeeNumber || undefined,
+      position: searchPosition || undefined,
+      department: selectedDepartment || undefined,
+    });
+  };
+
+  // Clear search function
+  const handleClearSearch = () => {
+    setSearchName('');
+    setSearchEmployeeNumber('');
+    setSearchPosition('');
+    setSelectedDepartment('');
+    setSearchParams({});
+  };
 
   // Query key will change with department filter; no manual page reset needed
 
@@ -121,9 +128,14 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<AddEmployeeFormData>({
     resolver: yupResolver(addEmployeeSchema),
+    defaultValues: {
+      department: user?.role === 'MANAGER' ? user.employee?.department : '',
+      managerId: user?.role === 'MANAGER' ? user.employee?.id : '',
+    },
   });
 
   // Edit form
@@ -182,10 +194,20 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
   // Enhanced mutation handlers with better error handling
   const handleAddEmployee = async (data: AddEmployeeFormData) => {
     try {
-      await addEmployeeMutation.mutateAsync(data);
+      // For managers, enforce their department and set them as the manager
+      const employeeData = { ...data };
+      if (user?.role === 'MANAGER' && user.employee) {
+        employeeData.department = user.employee.department;
+        employeeData.managerId = user.employee.id;
+      }
+      
+      await addEmployeeMutation.mutateAsync(employeeData);
       toast.success('Employee added successfully!');
       setShowAddModal(false);
-      reset();
+      reset({
+        department: user?.role === 'MANAGER' ? user.employee?.department : '',
+        managerId: user?.role === 'MANAGER' ? user.employee?.id : '',
+      });
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to add employee');
     }
@@ -315,13 +337,15 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-          <button 
-            onClick={() => setShowAddModal(true)}
-            className="btn-primary inline-flex items-center space-x-2"
-          >
-            <PlusIcon className="h-5 w-5" />
-            <span>Add Employee</span>
-          </button>
+          {canAddEmployee && (
+            <button 
+              onClick={() => setShowAddModal(true)}
+              className="btn-primary inline-flex items-center space-x-2"
+            >
+              <PlusIcon className="h-5 w-5" />
+              <span>Add Employee</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -336,9 +360,10 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
               </div>
               <input
                 type="text"
-                placeholder="Search by name..."
+                placeholder="Search by name or email..."
                 value={searchName}
                 onChange={(e) => setSearchName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 className="input-field pl-10"
               />
             </div>
@@ -349,6 +374,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 placeholder="Employee Number"
                 value={searchEmployeeNumber}
                 onChange={(e) => setSearchEmployeeNumber(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 className="input-field"
               />
             </div>
@@ -359,19 +385,11 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 placeholder="Position"
                 value={searchPosition}
                 onChange={(e) => setSearchPosition(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 className="input-field"
               />
             </div>
-            {/* Manager */}
-            <div>
-              <input
-                type="text"
-                placeholder="Manager Name"
-                value={searchManager}
-                onChange={(e) => setSearchManager(e.target.value)}
-                className="input-field"
-              />
-            </div>
+
             {/* Department Filter - Only show for admins who can see all employees */}
             {user?.role === 'ADMIN' && (
               <div>
@@ -389,6 +407,24 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 </select>
               </div>
             )}
+          </div>
+          
+          {/* Search Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 mt-4 pt-4 border-t border-gray-200">
+            <button
+              onClick={handleSearch}
+              className="btn-primary inline-flex items-center justify-center space-x-2"
+            >
+              <MagnifyingGlassIcon className="h-4 w-4" />
+              <span>Search</span>
+            </button>
+            <button
+              onClick={handleClearSearch}
+              className="btn-secondary inline-flex items-center justify-center space-x-2"
+            >
+              <XMarkIcon className="h-4 w-4" />
+              <span>Clear</span>
+            </button>
           </div>
         </div>
       </div>
@@ -416,7 +452,10 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
               <button
                 onClick={() => {
                   setShowAddModal(false);
-                  reset();
+                  reset({
+                    department: user?.role === 'MANAGER' ? user.employee?.department : '',
+                    managerId: user?.role === 'MANAGER' ? user.employee?.id : '',
+                  });
                 }}
                 className="text-gray-400 hover:text-gray-600"
               >
@@ -508,10 +547,15 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Department
+                    {user?.role === 'MANAGER' && (
+                      <span className="text-sm text-gray-500 ml-1">(Auto-assigned to your department)</span>
+                    )}
                   </label>
                   <select
                     {...register('department')}
                     className={`input-field ${errors.department ? 'border-red-300' : ''}`}
+                    disabled={user?.role === 'MANAGER'}
+                    value={user?.role === 'MANAGER' ? user.employee?.department : undefined}
                   >
                     <option value="">Select Department</option>
                     <option value="management">Management</option>
@@ -566,11 +610,16 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
               {/* Manager Selection - Full Width */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Manager (Optional)
+                  Manager {user?.role === 'ADMIN' ? '(Optional)' : ''}
+                  {user?.role === 'MANAGER' && (
+                    <span className="text-sm text-gray-500 ml-1">(Auto-assigned to you)</span>
+                  )}
                 </label>
                 <select
                   {...register('managerId')}
                   className="input-field"
+                  disabled={user?.role === 'MANAGER'}
+                  value={user?.role === 'MANAGER' ? user.employee?.id : undefined}
                 >
                   <option value="">Select a manager</option>
                   {managersData?.employees?.map((manager: Employee) => (

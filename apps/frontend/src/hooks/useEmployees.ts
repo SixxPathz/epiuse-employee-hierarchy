@@ -49,6 +49,9 @@ interface EmployeeListParams {
   page?: number;
   limit?: number;
   search?: string;
+  name?: string;
+  employeeNumber?: string;
+  position?: string;
   department?: string;
   sortBy?: string;
   sortOrder?: string;
@@ -171,9 +174,10 @@ export const useCurrentUser = (options?: Partial<UseQueryOptions<User>>) => {
       const user = (response.data && (response.data.user ?? response.data)) as User;
       return user;
     },
-    staleTime: 15 * 60 * 1000, // 15 minutes - user data doesn't change often
-    gcTime: 30 * 60 * 1000,
+    staleTime: 0, // Always refetch to ensure fresh user data
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
     retry: 1,
+    refetchOnMount: true, // Always refetch on mount
     onSuccess: (data: User) => {
       // Keep localStorage in sync so pages that read from it render instantly
       if (typeof window !== 'undefined' && data) {
@@ -186,6 +190,45 @@ export const useCurrentUser = (options?: Partial<UseQueryOptions<User>>) => {
       }
     },
     ...(options || {} as any),
+  });
+};
+
+// Authentication utilities
+export const useLogout = () => {
+  const queryClient = useQueryClient();
+
+  return () => {
+    // Clear all React Query cache
+    queryClient.clear();
+    
+    // Clear localStorage
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user');
+    
+    // Force redirect to login
+    window.location.href = '/auth/login';
+  };
+};
+
+export const useLogin = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (credentials: { email: string; password: string }) => {
+      const response = await api.post('/auth/login', credentials);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      // Clear existing cache to prevent stale user data
+      queryClient.clear();
+      
+      // Store new authentication data
+      localStorage.setItem('auth_token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      
+      // Immediately set the new user in cache
+      queryClient.setQueryData(queryKeys.currentUser, data.user);
+    },
   });
 };
 

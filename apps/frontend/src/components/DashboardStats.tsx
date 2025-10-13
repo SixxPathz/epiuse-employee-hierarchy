@@ -35,41 +35,94 @@ export default function DashboardStats({ user }: DashboardStatsProps) {
     },
   });
 
-  const stats = [
-    {
-      name: 'Total Employees',
-      value: insights?.totalEmployees || 0,
-      icon: UsersIcon,
-      color: 'text-company-navy',
-      bgColor: 'bg-gray-50',
-    },
-    // Only show salary stats to users who can view salaries
-    ...(permissions.canViewSalaries ? [{
-      name: 'Average Salary',
-      value: insights?.avgSalaryByPosition?.length 
-        ? formatCurrency(insights.avgSalaryByPosition[0]._avg.salary)
-        : formatCurrency(0),
-      icon: BanknotesIcon,
-      color: 'text-company-red',
-      bgColor: 'bg-gray-50',
-    }] : []),
-    {
-      name: 'Managers',
-      value: insights?.managementRatio?.totalManagers || 0,
-      icon: UserGroupIcon,
-      color: 'text-company-navy',
-      bgColor: 'bg-gray-50',
-    },
-    {
-      name: 'Management Ratio',
-      value: insights?.managementRatio?.ratio 
-        ? `${insights.managementRatio.ratio.toFixed(1)}%`
-        : '0%',
-      icon: ChartBarIcon,
-      color: 'text-company-red',
-      bgColor: 'bg-gray-50',
-    },
-  ];
+  // Role-specific stats configuration
+  const getStatsForRole = () => {
+    const baseStats = [
+      {
+        name: 'Total Employees',
+        value: insights?.totalEmployees || 0,
+        icon: UsersIcon,
+        color: 'text-company-navy',
+        bgColor: 'bg-gray-50',
+      },
+    ];
+
+    if (user?.role === 'ADMIN') {
+      // Admin sees full organizational overview
+      return [
+        ...baseStats,
+        ...(permissions.canViewSalaries ? [{
+          name: 'Average Salary',
+          value: insights?.avgSalaryByPosition?.length 
+            ? formatCurrency(insights.avgSalaryByPosition[0]._avg.salary)
+            : formatCurrency(0),
+          icon: BanknotesIcon,
+          color: 'text-company-red',
+          bgColor: 'bg-gray-50',
+        }] : []),
+        {
+          name: 'Total Managers',
+          value: insights?.managementRatio?.totalManagers || 0,
+          icon: UserGroupIcon,
+          color: 'text-company-navy',
+          bgColor: 'bg-gray-50',
+        },
+        {
+          name: 'Management Ratio',
+          value: insights?.managementRatio?.ratio 
+            ? `${insights.managementRatio.ratio.toFixed(1)}%`
+            : '0%',
+          icon: ChartBarIcon,
+          color: 'text-company-red',
+          bgColor: 'bg-gray-50',
+        },
+      ];
+    } else if (user?.role === 'MANAGER') {
+      // Manager sees team-focused stats
+      return [
+        ...baseStats,
+        {
+          name: 'My Department',
+          value: user.employee?.department 
+            ? formatDepartmentName(user.employee.department)
+            : 'N/A',
+          icon: UserGroupIcon,
+          color: 'text-company-navy',
+          bgColor: 'bg-gray-50',
+        },
+        {
+          name: 'Total Managers',
+          value: insights?.managementRatio?.totalManagers || 0,
+          icon: ChartBarIcon,
+          color: 'text-company-red',
+          bgColor: 'bg-gray-50',
+        },
+      ];
+    } else {
+      // Employee sees basic company overview
+      return [
+        ...baseStats,
+        {
+          name: 'My Department',
+          value: user?.employee?.department 
+            ? formatDepartmentName(user.employee.department)
+            : 'N/A',
+          icon: UserGroupIcon,
+          color: 'text-company-navy',
+          bgColor: 'bg-gray-50',
+        },
+        {
+          name: 'Company Departments',
+          value: insights?.departmentDistribution?.length || 0,
+          icon: ChartBarIcon,
+          color: 'text-company-red',
+          bgColor: 'bg-gray-50',
+        },
+      ];
+    }
+  };
+
+  const stats = getStatsForRole();
 
   if (isLoading) {
     return (

@@ -15,9 +15,6 @@ export default function SettingsPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('general');
-  const [settings, setSettings] = useState({
-    emailNotifications: true,
-  });
   const router = useRouter();
 
   useEffect(() => {
@@ -64,10 +61,7 @@ export default function SettingsPage() {
     return null;
   }
 
-  const handleSave = () => {
-    // In a real app, you'd save these to the backend
-    alert('Settings saved successfully!');
-  };
+
 
   // Only show settings for ADMIN users
   if (user.role !== 'ADMIN') {
@@ -160,36 +154,7 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className="card">
-                <div className="card-header">
-                  <h3 className="text-lg font-semibold text-gray-900">System Preferences</h3>
-                </div>
-                <div className="card-body space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Email Notifications
-                      </label>
-                      <p className="text-sm text-gray-500">Receive email notifications for important events</p>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={settings.emailNotifications}
-                      onChange={(e) => setSettings({...settings, emailNotifications: e.target.checked})}
-                      className="h-4 w-4 text-company-navy border-gray-300 rounded focus:ring-company-navy"
-                    />
-                  </div>
-                </div>
-              </div>
 
-              <div className="flex justify-end">
-                <button
-                  onClick={handleSave}
-                  className="btn-primary"
-                >
-                  Save Settings
-                </button>
-              </div>
             </div>
           )}
 

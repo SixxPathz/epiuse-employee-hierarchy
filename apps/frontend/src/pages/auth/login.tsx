@@ -7,7 +7,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import toast from 'react-hot-toast';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
-import api from '../../utils/api';
+import { useLogin } from '../../hooks/useEmployees';
 
 const schema = yup.object({
   email: yup.string().email('Invalid email').required('Email is required'),
@@ -21,8 +21,8 @@ type LoginFormData = {
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const loginMutation = useLogin();
 
   const {
     register,
@@ -33,27 +33,22 @@ export default function Login() {
   });
 
   const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true);
     try {
-      // Make actual API call to backend
-      const response = await api.post('/auth/login', {
+      const result = await loginMutation.mutateAsync({
         email: data.email,
-        password: data.password
+        password: data.password,
       });
 
-      const { token, user } = response.data;
-
-      // Store authentication data
-      localStorage.setItem('auth_token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      
-      toast.success('Login successful!');
-      router.push('/dashboard');
+      if (result.user) {
+        toast.success('Login successful!');
+        
+        // Redirect based on role
+        const redirectPath = result.user.role === 'ADMIN' ? '/dashboard' : '/employees';
+        router.push(redirectPath);
+      }
     } catch (error: any) {
       console.error('Login error:', error);
       toast.error(error.response?.data?.error || 'Invalid credentials. Please check your email and password.');
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -134,10 +129,10 @@ export default function Login() {
                 <div>
                   <button
                     type="submit"
-                    disabled={isLoading}
+                    disabled={loginMutation.isPending}
                     className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isLoading ? (
+                    {loginMutation.isPending ? (
                       <>
                         <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
