@@ -1,4 +1,5 @@
 # Netlify settings for Next.js SPA routing
+# Redirect all paths to index.html for SPA routing
 /*    /index.html   200
 
 # API proxy to Railway backend  
