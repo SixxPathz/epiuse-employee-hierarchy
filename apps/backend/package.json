@@ -11,8 +11,8 @@
     "test:watch": "jest --watch",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:seed": "ts-node seed.ts",
-    "seed:prod": "node dist/seed.js"
+    "prisma:seed": "ts-node src/seed.ts",
+    "seed:prod": "node dist/src/seed.js"
   },
   "dependencies": {
     "@prisma/client": "^6.17.0",
