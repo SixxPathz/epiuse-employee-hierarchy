@@ -45,6 +45,7 @@
     "@types/node": "^20.9.0",
     "@types/react": "^18.2.38",
     "@types/react-dom": "^18.2.17",
+    "@types/crypto-js": "^4.2.1",
     "yup": "^1.4.0"
   },
   "devDependencies": {
@@ -52,7 +53,6 @@
     "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^14.1.2",
     "@testing-library/user-event": "^14.5.1",
-    "@types/crypto-js": "^4.2.1",
     "@typescript-eslint/eslint-plugin": "^6.12.0",
     "@typescript-eslint/parser": "^6.12.0",
     "eslint": "^8.54.0",
