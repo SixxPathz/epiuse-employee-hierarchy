@@ -366,12 +366,14 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
               </button>
             </div>
             <form onSubmit={handleSubmit(data => {
-              // If adding a manager, set managerId to CEO
+              // If adding a manager, set managerId to CEO if found, else null
               let payload = { ...data };
-              if (addType === 'manager' && managersData?.employees) {
-                const ceo = managersData.employees.find((emp: Employee) => emp.position.toLowerCase().includes('ceo'));
-                if (ceo) {
-                  payload.managerId = ceo.id;
+              if (addType === 'manager') {
+                if (managersData?.employees) {
+                  const ceo = managersData.employees.find((emp: Employee) => emp.position.toLowerCase().includes('ceo'));
+                  payload.managerId = ceo ? ceo.id : undefined;
+                } else {
+                  payload.managerId = undefined;
                 }
               }
               // If adding an employee, auto-assign managerId
