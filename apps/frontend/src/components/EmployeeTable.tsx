@@ -132,11 +132,12 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
 
   // Forms
   const {
-    register,
-    handleSubmit,
-    reset,
-    setValue,
-    formState: { errors, isSubmitting },
+  register,
+  handleSubmit,
+  reset,
+  setValue,
+  getValues,
+  formState: { errors, isSubmitting },
   } = useForm<AddEmployeeFormData>({
     resolver: yupResolver(addEmployeeSchema),
     defaultValues: {
