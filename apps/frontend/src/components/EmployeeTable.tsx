@@ -11,7 +11,6 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { getUserPermissions } from '../utils/permissions';
-import { Employee, User } from '../types';
 // Removed unused helper imports; virtual table handles row rendering
 import { TableSkeleton, SearchSkeleton } from './Skeletons';
 import { VirtualEmployeeTable } from './VirtualEmployeeTable';
@@ -23,20 +22,12 @@ import {
   useDeleteEmployee,
   usePrefetchEmployee,
 } from '../hooks/useEmployees';
+import { normalizeDept, getDepartments } from '../utils/departments';
+import { isManager, isCEO, getManagers } from '../utils/roles';
+import { addEmployeeSchema, handleApiError } from '../utils/validation';
+import type { EmployeeFormData as AddEmployeeFormData, User } from '../types';
+import type { Employee } from '../types';
 
-const addEmployeeSchema = yup.object({
-  firstName: yup.string().required('First name is required'),
-  lastName: yup.string().required('Last name is required'),
-  email: yup.string().email('Invalid email').required('Email is required'),
-  employeeNumber: yup.string().required('Employee number is required'),
-  position: yup.string().required('Position is required'),
-  department: yup.string().required('Department is required'),
-  salary: yup.number().positive('Salary must be positive').required('Salary is required'),
-  birthDate: yup.string().required('Birth date is required'),
-  managerId: yup.string().optional(),
-});
-
-type AddEmployeeFormData = yup.InferType<typeof addEmployeeSchema>;
 
 interface EmployeeTableProps {
   user?: User;
@@ -87,25 +78,18 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
     return true;
   });
 
-  // Departments
-  // Normalize department names (case-insensitive, trimmed)
-  const normalizeDept = (dept: string) => dept.trim().toLowerCase().replace(/\s+/g, '-');
   // Memoized department-to-manager map for fast lookup
   const departmentManagerMap = useMemo(() => {
     const map = new Map<string, Employee>();
-    allEmployees.forEach(emp => {
-      if (emp.department && (emp.position.toLowerCase().includes('manager') || emp.position.toLowerCase().includes('head of') || emp.position.toLowerCase().includes('director'))) {
+    getManagers(allEmployees).forEach(emp => {
+      if (emp.department) {
         map.set(normalizeDept(emp.department), emp);
       }
     });
     return map;
   }, [allEmployees]);
 
-  const departmentSet = new Set<string>();
-  allEmployees.forEach(emp => {
-    if (emp.department) departmentSet.add(normalizeDept(emp.department));
-  });
-  const departments = Array.from(departmentSet);
+  const departments = getDepartments(allEmployees);
   const departmentsWithManagers = new Set<string>(Array.from(departmentManagerMap.keys()));
   const availableDepartmentsForManager = departments.filter(dep => !departmentsWithManagers.has(dep));
   const isDuplicateDepartment = customDepartment && departments.includes(normalizeDept(customDepartment));
@@ -370,7 +354,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
               let payload = { ...data };
               if (addType === 'manager') {
                 if (managersData?.employees) {
-                  const ceo = managersData.employees.find((emp: Employee) => emp.position.toLowerCase().includes('chief executive officer'));
+                  const ceo = managersData.employees.find(isCEO);
                   payload.managerId = ceo ? ceo.id : undefined;
                 } else {
                   payload.managerId = undefined;
@@ -400,7 +384,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 setShowAddModal(false);
                 reset();
               }).catch(err => {
-                toast.error('Failed to add employee');
+                toast.error(handleApiError(err, 'Failed to add employee'));
               });
             })} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
