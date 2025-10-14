@@ -230,7 +230,7 @@ export default function Layout({ children, user: initialUser }: LayoutProps) {
                   </div>
                   {/* Portal name underneath */}
                   <div className="text-center">
-                    <h1 className="text-sm font-semibold text-epi-navy">EPI-USE Employee Portal</h1>
+                    <h1 className="text-sm font-semibold text-gray-600">EPI-USE Employee Portal</h1>
                   </div>
                 </div>
               </div>
