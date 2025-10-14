@@ -556,7 +556,7 @@ router.post('/', [
       }
 
       // Create user record first (required for foreign key relationship)
-      const hashedPassword = await bcrypt.hash('temppassword123', 10); // Temporary password
+  const hashedPassword = await bcrypt.hash('securepassword123', 10); // Default password
       const user = await tx.user.create({
         data: {
           email,
