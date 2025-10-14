@@ -465,7 +465,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
           <div className="relative mx-auto p-6 border max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-lg rounded-lg bg-white">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Add New Employee</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{addType === 'manager' ? 'Add New Manager' : 'Add New Employee'}</h3>
               <button
                 onClick={() => {
                   setShowAddModal(false);
@@ -545,6 +545,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 </div>
               </div>
 
+              {/* Position field for both manager and employee */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -554,9 +555,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                     {...register('position')}
                     type="text"
                     className={`input-field ${errors.position ? 'border-red-300' : ''}`}
-                    placeholder={addType === 'manager' ? 'Manager Position' : 'Enter job position'}
-                    value={addType === 'manager' ? 'Manager' : undefined}
-                    readOnly={addType === 'manager'}
+                    placeholder="Enter job position"
                   />
                   {errors.position && (
                     <p className="text-red-500 text-xs mt-1">{errors.position.message}</p>
@@ -566,15 +565,15 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Department
-                    {user?.role === 'MANAGER' && (
+                    {user?.role === 'MANAGER' && addType === 'manager' && (
                       <span className="text-sm text-gray-500 ml-1">(Auto-assigned to your department)</span>
                     )}
                   </label>
                   <select
                     {...register('department')}
                     className={`input-field ${errors.department ? 'border-red-300' : ''}`}
-                    disabled={user?.role === 'MANAGER'}
-                    value={user?.role === 'MANAGER' ? user.employee?.department : undefined}
+                    disabled={user?.role === 'MANAGER' && addType === 'manager'}
+                    value={user?.role === 'MANAGER' && addType === 'manager' ? user.employee?.department : undefined}
                     onChange={e => {
                       if (e.target.value === 'other') {
                         setShowCustomDepartment(true);
@@ -607,65 +606,69 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {permissions.canViewSalaries && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Salary (ZAR)
-                    </label>
-                    <input
-                      {...register('salary')}
-                      type="number"
-                      min="0"
-                      step="1000"
-                      className={`input-field ${errors.salary ? 'border-red-300' : ''}`}
-                      placeholder="Enter annual salary"
-                    />
-                    {errors.salary && (
-                      <p className="text-red-500 text-xs mt-1">{errors.salary.message}</p>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Birth Date
-                  </label>
-                  <input
-                    {...register('birthDate')}
-                    type="date"
-                    className={`input-field ${errors.birthDate ? 'border-red-300' : ''}`}
-                  />
-                  {errors.birthDate && (
-                    <p className="text-red-500 text-xs mt-1">{errors.birthDate.message}</p>
+              {/* Only show salary, birth date, and manager selection for employee, not manager */}
+                {/* Only show salary and birth date for both, but manager selection only for employees */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {permissions.canViewSalaries && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Salary (ZAR)
+                      </label>
+                      <input
+                        {...register('salary')}
+                        type="number"
+                        min="0"
+                        step="1000"
+                        className={`input-field ${errors.salary ? 'border-red-300' : ''}`}
+                        placeholder="Enter annual salary"
+                      />
+                      {errors.salary && (
+                        <p className="text-red-500 text-xs mt-1">{errors.salary.message}</p>
+                      )}
+                    </div>
                   )}
                 </div>
-              </div>
 
-              {/* Manager Selection - Full Width */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Manager {user?.role === 'ADMIN' ? '(Optional)' : ''}
-                  {user?.role === 'MANAGER' && (
-                    <span className="text-sm text-gray-500 ml-1">(Auto-assigned to you)</span>
-                  )}
-                </label>
-                <select
-                  {...register('managerId')}
-                  className="input-field"
-                  disabled={user?.role === 'MANAGER'}
-                  value={user?.role === 'MANAGER' ? user.employee?.id : undefined}
-                >
-                  <option value="">Select a manager</option>
-                  {managersData?.employees?.map((manager: Employee) => (
-                    <option key={manager.id} value={manager.id}>
-                      {manager.firstName} {manager.lastName} - {manager.position}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Birth Date
+                    </label>
+                    <input
+                      {...register('birthDate')}
+                      type="date"
+                      className={`input-field ${errors.birthDate ? 'border-red-300' : ''}`}
+                    />
+                    {errors.birthDate && (
+                      <p className="text-red-500 text-xs mt-1">{errors.birthDate.message}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Manager Selection - Only for employees */}
+                {addType !== 'manager' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Manager {user?.role === 'ADMIN' ? '(Optional)' : ''}
+                      {user?.role === 'MANAGER' && (
+                        <span className="text-sm text-gray-500 ml-1">(Auto-assigned to you)</span>
+                      )}
+                    </label>
+                    <select
+                      {...register('managerId')}
+                      className="input-field"
+                      disabled={user?.role === 'MANAGER'}
+                      value={user?.role === 'MANAGER' ? user.employee?.id : undefined}
+                    >
+                      <option value="">Select a manager</option>
+                      {managersData?.employees?.map((manager: Employee) => (
+                        <option key={manager.id} value={manager.id}>
+                          {manager.firstName} {manager.lastName} - {manager.position}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
               <div className="flex justify-end space-x-3 pt-4">
                 <button
@@ -684,7 +687,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                   className="btn-primary"
                   disabled={addEmployeeMutation.isPending}
                 >
-                  {addEmployeeMutation.isPending ? 'Adding...' : 'Add Employee'}
+                  {addEmployeeMutation.isPending ? (addType === 'manager' ? 'Adding Manager...' : 'Adding...') : (addType === 'manager' ? 'Add Manager' : 'Add Employee')}
                 </button>
               </div>
             </form>
