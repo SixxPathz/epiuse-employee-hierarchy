@@ -71,14 +71,14 @@ export default function OrganizationChart() {
   // Enhanced tree view with better styling and interactivity
   const renderTreeNode = (node: any, level = 0) => {
     if (!searchInHierarchy(node, searchTerm)) return null;
-    
+
     const hasChildren = node.children && node.children.length > 0;
     const isExpanded = expandedNodes.has(node.id);
     const indentLevel = level * 24; // 24px per level
 
     return (
       <div key={node.id} className="mb-2">
-        <div 
+        <div
           className="flex items-center p-3 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
           style={{ marginLeft: `${indentLevel}px` }}
         >
@@ -95,19 +95,19 @@ export default function OrganizationChart() {
               )}
             </button>
           )}
-          
+
           {/* Connection Line */}
           {level > 0 && (
             <div className="absolute w-6 h-px bg-gray-300" style={{ left: `${indentLevel - 12}px` }} />
           )}
-          
+
           {/* Employee Avatar */}
           <div className="flex-shrink-0 mr-3">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
               {node.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
             </div>
           </div>
-          
+
           {/* Employee Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-2">
@@ -121,7 +121,7 @@ export default function OrganizationChart() {
               <span className="truncate">{node.email}</span>
             </div>
           </div>
-          
+
           {/* Team Size Badge */}
           {hasChildren && (
             <div className="flex-shrink-0 ml-2">
@@ -132,9 +132,9 @@ export default function OrganizationChart() {
             </div>
           )}
         </div>
-        
+
         {/* Render Children */}
-        {hasChildren && (isExpanded || !searchTerm) && (
+        {hasChildren && isExpanded && (
           <div className="mt-2">
             {node.children.map((child: any) => renderTreeNode(child, level + 1))}
           </div>
