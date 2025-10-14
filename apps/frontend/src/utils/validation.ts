@@ -35,11 +35,7 @@ export function isDuplicateEmployee(newData: { email: string; employeeNumber: st
 }
 
 export function handleApiError(error: any, fallbackMsg = 'Operation failed') {
-  if (!error) return fallbackMsg;
-  if (error.response && error.response.data) {
-    if (error.response.data.error) return error.response.data.error;
-    if (error.response.data.errors) return Array.isArray(error.response.data.errors) ? error.response.data.errors.join(', ') : error.response.data.errors;
-  }
-  if (error.message) return error.message;
+  if (error?.response?.data?.error) return error.response.data.error;
+  if (error?.message) return error.message;
   return fallbackMsg;
 }
