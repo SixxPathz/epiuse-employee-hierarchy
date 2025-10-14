@@ -26,7 +26,7 @@ interface DashboardStatsResponse {
 }
 
 interface HierarchyTreeResponse {
-  tree: any; // Define proper type based on your tree structure
+  tree: any;
 }
 
 // Query Keys - Centralized for better cache management
@@ -68,11 +68,10 @@ export const useEmployees = (
       const response = await api.get('/api/employees', { params });
       return response.data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh
-    gcTime: 10 * 60 * 1000, // 10 minutes - cache retention
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    ...options,
+  staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh
+  refetchOnWindowFocus: false,
+  refetchOnMount: false,
+  ...options,
   });
 };
 

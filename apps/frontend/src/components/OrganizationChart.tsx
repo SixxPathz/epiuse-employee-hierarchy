@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import type { OrganizationNode } from '../types';
 import { 
   MagnifyingGlassIcon, 
   ChevronDownIcon, 
@@ -15,11 +16,11 @@ export default function OrganizationChart() {
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   // Only tree view is enabled
 
-  const { data: hierarchy, isLoading } = useQuery({
+  const { data: hierarchy, isLoading } = useQuery<OrganizationNode>({
     queryKey: ['hierarchy'],
     queryFn: async () => {
       const response = await api.get('/api/employees/hierarchy/tree');
-      return response.data.hierarchy;
+      return response.data.hierarchy as OrganizationNode;
     },
   });
 
@@ -35,7 +36,7 @@ export default function OrganizationChart() {
   };
 
   // Search function to filter nodes
-  const searchInHierarchy = (node: any, term: string): boolean => {
+  const searchInHierarchy = (node: OrganizationNode, term: string): boolean => {
     if (!term) return true;
     
     const searchStr = term.toLowerCase();
@@ -49,7 +50,7 @@ export default function OrganizationChart() {
     
     // Check if any children match
     if (node.children) {
-      return node.children.some((child: any) => searchInHierarchy(child, term));
+      return node.children.some((child: OrganizationNode) => searchInHierarchy(child, term));
     }
     
     return false;
@@ -69,7 +70,7 @@ export default function OrganizationChart() {
   }
 
   // Enhanced tree view with better styling and interactivity
-  const renderTreeNode = (node: any, level = 0) => {
+  const renderTreeNode = (node: OrganizationNode, level = 0) => {
     if (!searchInHierarchy(node, searchTerm)) return null;
 
     const hasChildren = node.children && node.children.length > 0;
@@ -136,7 +137,7 @@ export default function OrganizationChart() {
         {/* Render Children */}
         {hasChildren && isExpanded && (
           <div className="mt-2">
-            {node.children.map((child: any) => renderTreeNode(child, level + 1))}
+            {node.children.map((child: OrganizationNode) => renderTreeNode(child, level + 1))}
           </div>
         )}
       </div>
@@ -144,7 +145,7 @@ export default function OrganizationChart() {
   };
 
   // Compact card view for better overview
-  const renderCompactNode = (node: any) => (
+  const renderCompactNode = (node: OrganizationNode) => (
     <div key={node.id} className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow duration-200">
       <div className="flex items-center space-x-3">
         <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
@@ -172,10 +173,10 @@ export default function OrganizationChart() {
   );
 
   // Get all nodes for compact view
-  const getAllNodes = (node: any): any[] => {
-    let nodes = [node];
+  const getAllNodes = (node: OrganizationNode): OrganizationNode[] => {
+    let nodes: OrganizationNode[] = [node];
     if (node.children) {
-      node.children.forEach((child: any) => {
+      node.children.forEach((child: OrganizationNode) => {
         nodes.push(...getAllNodes(child));
       });
     }

@@ -11,7 +11,6 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { getUserPermissions } from '../utils/permissions';
-// Removed unused helper imports; virtual table handles row rendering
 import { TableSkeleton, SearchSkeleton } from './Skeletons';
 import { VirtualEmployeeTable } from './VirtualEmployeeTable';
 import {
@@ -67,8 +66,8 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
   const { data: managersData, isLoading: managersLoading } = useManagers();
 
   // Employees and managers
-  const allEmployees = (employeesPages?.pages || []).flatMap((p: any) => p.employees || []);
-  const filteredEmployees = allEmployees.filter((employee: Employee) => {
+  const allEmployees: Employee[] = (employeesPages?.pages || []).flatMap((p: { employees: Employee[] }) => p.employees || []);
+  const filteredEmployees: Employee[] = allEmployees.filter((employee: Employee) => {
     if (user?.role === 'MANAGER' && user?.employee?.id === employee.id) {
       return false;
     }
@@ -104,7 +103,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
   const permissions = getUserPermissions(user?.role || 'EMPLOYEE');
 
   // Helper function to determine if current user can view specific employee's salary
-  const canViewEmployeeSalary = (employee: Employee) => {
+  const canViewEmployeeSalary = (employee: Employee): boolean => {
     if (!permissions.canViewSalaries) return false;
     if (user?.role === 'ADMIN') return true;
     if (user?.role === 'MANAGER') {
@@ -112,7 +111,8 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
       const isSubordinate = (emp: Employee, managerId: string): boolean => {
         if (!emp.manager) return false;
         if (emp.manager.id === managerId) return true;
-        return isSubordinate(emp.manager as any, managerId);
+        // Type guard: emp.manager is Employee
+        return isSubordinate(emp.manager as Employee, managerId);
       };
       return user.employee?.id ? isSubordinate(employee, user.employee.id) : false;
     }
@@ -238,6 +238,8 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
               <button 
                 onClick={() => { setShowAddModal(true); setAddType('employee'); }}
                 className="btn-primary inline-flex items-center space-x-2"
+                disabled={departments.length === 0 || isLoading || !permissions.canCreateEmployees}
+                title={departments.length === 0 ? 'No departments available' : undefined}
               >
                 <PlusIcon className="h-5 w-5" />
                 <span>Add Employee</span>
@@ -246,6 +248,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 <button
                   onClick={() => { setShowAddModal(true); setAddType('manager'); }}
                   className="btn-secondary inline-flex items-center space-x-2"
+                  disabled={isLoading || !permissions.canCreateEmployees}
                 >
                   <PlusIcon className="h-5 w-5" />
                   <span>Add Manager</span>

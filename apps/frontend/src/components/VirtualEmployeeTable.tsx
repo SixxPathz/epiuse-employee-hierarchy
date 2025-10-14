@@ -16,10 +16,12 @@ interface VirtualEmployeeTableProps {
   loadMore?: () => void;
 }
 
+import type { UserPermissions } from '../utils/permissions';
+
 interface EmployeeRowProps {
   employee: Employee;
   user?: User;
-  permissions: any;
+  permissions: UserPermissions;
   onEdit: (employee: Employee) => void;
   onDelete: (employeeId: string) => void;
   canViewEmployeeSalary: (employee: Employee) => boolean;
@@ -166,7 +168,8 @@ export const VirtualEmployeeTable: React.FC<VirtualEmployeeTableProps> = ({
       const isSubordinate = (emp: Employee, managerId: string): boolean => {
         if (!emp.manager) return false;
         if (emp.manager.id === managerId) return true;
-        return isSubordinate(emp.manager as any, managerId);
+        // Type guard: emp.manager is Employee
+        return isSubordinate(emp.manager as Employee, managerId);
       };
       
       return user.employee?.id ? isSubordinate(employee, user.employee.id) : false;

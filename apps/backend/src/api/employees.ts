@@ -462,12 +462,31 @@ router.post('/', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { firstName, lastName, email, birthDate, employeeNumber, salary, position, managerId, department } = req.body;
+    let { firstName, lastName, email, birthDate, employeeNumber, salary, position, managerId, department } = req.body;
+    // Normalize department name and employee number
+    department = typeof department === 'string' ? department.trim().toLowerCase().replace(/\s+/g, '-') : department;
+    employeeNumber = typeof employeeNumber === 'string' ? employeeNumber.trim().toUpperCase() : employeeNumber;
+    // Validate employee number format
+    if (!/^EMP-\d{3,5}$/i.test(employeeNumber)) {
+      return res.status(400).json({ error: 'Employee number must be in format EMP-XXX' });
+    }
+    // Validate department name format
+    if (!/^[a-z0-9-]{2,30}$/i.test(department)) {
+      return res.status(400).json({ error: 'Department name must be 2-30 characters, letters/numbers/hyphens only' });
+    }
     const currentUser = (req as any).user;
 
     // PROFESSIONAL MANAGEMENT SYSTEM: Authorization checks
     if (currentUser.role === 'EMPLOYEE') {
       return res.status(403).json({ error: 'Employees cannot create new employee records' });
+    }
+    // Only admins can add managers or create new departments
+    if ((position.toLowerCase().includes('manager') || position.toLowerCase().includes('head of') || position.toLowerCase().includes('director')) && currentUser.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Only admins can add managers or create new departments' });
+    }
+    // Managers can only add employees to their own department
+    if (currentUser.role === 'MANAGER' && department !== currentUser.employee?.department) {
+      return res.status(403).json({ error: 'Managers can only add employees to their own department' });
     }
 
     // Enforce backend rules for manager/employee creation

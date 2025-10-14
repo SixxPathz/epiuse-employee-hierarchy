@@ -14,4 +14,3 @@ export function getManagers(employees: Employee[]): Employee[] {
   return employees.filter(isManager);
 }
 
-export {};
