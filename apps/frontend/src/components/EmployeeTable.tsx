@@ -12,9 +12,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { getUserPermissions } from '../utils/permissions';
 import { TableSkeleton, SearchSkeleton } from './Skeletons';
-import { VirtualEmployeeTable } from './VirtualEmployeeTable';
 import {
-  useInfiniteEmployees,
+  useEmployees,
   useManagers,
   useAddEmployee,
   useUpdateEmployee,
@@ -49,15 +48,15 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
   const [searchParams, setSearchParams] = useState({});
 
   // Data hooks
+  const [currentPage, setCurrentPage] = useState(1);
   const {
-    data: employeesPages,
+    data: employeesData,
     isLoading,
     error,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteEmployees({
-    limit: 50,
+    refetch,
+  } = useEmployees({
+    page: currentPage,
+    limit: 20,
     ...searchParams,
     sortBy,
     sortOrder,
@@ -66,29 +65,21 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
   const { data: managersData, isLoading: managersLoading } = useManagers();
 
   // Employees and managers
-  const allEmployees: Employee[] = (employeesPages?.pages || []).flatMap((p: { employees: Employee[] }) => p.employees || []);
-  const filteredEmployees: Employee[] = allEmployees.filter((employee: Employee) => {
-    if (user?.role === 'MANAGER' && user?.employee?.id === employee.id) {
-      return false;
-    }
-    if ((user?.role === 'EMPLOYEE' || user?.role === 'MANAGER') && !employee.managerId) {
-      return false;
-    }
-    return true;
-  });
+  const employees: Employee[] = employeesData?.employees || [];
+  const pagination = employeesData?.pagination;
 
   // Memoized department-to-manager map for fast lookup
   const departmentManagerMap = useMemo(() => {
     const map = new Map<string, Employee>();
-    getManagers(allEmployees).forEach(emp => {
+    getManagers(employees).forEach(emp => {
       if (emp.department) {
         map.set(normalizeDept(emp.department), emp);
       }
     });
     return map;
-  }, [allEmployees]);
+  }, [employees]);
 
-  const departments = getDepartments(allEmployees);
+  const departments = getDepartments(employees);
   const departmentsWithManagers = new Set<string>(Array.from(departmentManagerMap.keys()));
   const availableDepartmentsForManager = departments.filter(dep => !departmentsWithManagers.has(dep));
   const isDuplicateDepartment = customDepartment && departments.includes(normalizeDept(customDepartment));
@@ -216,8 +207,6 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
     );
   }
 
-  const employees = filteredEmployees;
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -308,30 +297,54 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
       </div>
 
       {/* Employee Table */}
-      <VirtualEmployeeTable
-        employees={employees}
-        user={user}
-        onEdit={emp => {
-          prefetchEmployee(emp.id);
-          setEditingEmployee(emp);
-          setShowEditModal(true);
-        }}
-        onDelete={empId => {
-          if (window.confirm('Are you sure you want to delete this employee?')) {
-            deleteEmployeeMutation.mutateAsync(empId).then(() => {
-              toast.success('Employee deleted successfully!');
-            }).catch(err => {
-              toast.error('Failed to delete employee');
-            });
-          }
-        }}
-        height={600}
-        hasMore={!!hasNextPage}
-        isLoadingMore={!!isFetchingNextPage}
-        loadMore={() => {
-          if (hasNextPage && !isFetchingNextPage) fetchNextPage();
-        }}
-      />
+      <div className="card">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead>
+            <tr>
+              <th>Employee</th>
+              <th>Position</th>
+              <th>Department</th>
+              <th>Salary</th>
+              <th>Manager</th>
+              <th>Joined</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {employees.map(emp => (
+              <tr key={emp.id}>
+                <td>{emp.firstName} {emp.lastName}</td>
+                <td>{emp.position}</td>
+                <td>{formatDepartmentName(emp.department)}</td>
+                <td>{canViewEmployeeSalary(emp) ? emp.salary : 'N/A'}</td>
+                <td>{emp.manager ? `${emp.manager.firstName} ${emp.manager.lastName}` : '—'}</td>
+                <td>{new Date(emp.createdAt).toLocaleDateString()}</td>
+                <td>
+                  <button onClick={() => { setEditingEmployee(emp); setShowEditModal(true); }}>Edit</button>
+                  <button onClick={() => deleteEmployeeMutation.mutateAsync(emp.id)}>Delete</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {/* Pagination Controls */}
+        {pagination && (
+          <div className="flex justify-between items-center mt-4">
+            <button
+              disabled={!pagination.hasPreviousPage}
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            >Previous</button>
+            <span>Page {pagination.currentPage} of {pagination.totalPages}</span>
+            <button
+              disabled={!pagination.hasNextPage}
+              onClick={() => setCurrentPage(p => p + 1)}
+            >Next</button>
+          </div>
+        )}
+      </div>
+      {/* ...modals... */}
+    </div>
+  );
 
       {/* Add/Edit Modals (simplified, can be expanded) */}
       {showAddModal && (
@@ -394,31 +407,31 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
                   <input {...register('firstName')} type="text" className={`input-field ${errors.firstName ? 'border-red-300' : ''}`} placeholder="Enter first name" />
-                  {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName.message}</p>}
+                  {errors?.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName?.message}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
                   <input {...register('lastName')} type="text" className={`input-field ${errors.lastName ? 'border-red-300' : ''}`} placeholder="Enter last name" />
-                  {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName.message}</p>}
+                  {errors?.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName?.message}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                   <input {...register('email')} type="email" className={`input-field ${errors.email ? 'border-red-300' : ''}`} placeholder="Enter email address" />
-                  {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+                  {errors?.email && <p className="text-red-500 text-xs mt-1">{errors.email?.message}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Employee Number</label>
                   <input {...register('employeeNumber')} type="text" className={`input-field ${errors.employeeNumber ? 'border-red-300' : ''}`} placeholder="e.g., EMP-021" />
-                  {errors.employeeNumber && <p className="text-red-500 text-xs mt-1">{errors.employeeNumber.message}</p>}
+                  {errors?.employeeNumber && <p className="text-red-500 text-xs mt-1">{errors.employeeNumber?.message}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
                   <input {...register('position')} type="text" className={`input-field ${errors.position ? 'border-red-300' : ''}`} placeholder="Enter job position" />
-                  {errors.position && <p className="text-red-500 text-xs mt-1">{errors.position.message}</p>}
+                  {errors?.position && <p className="text-red-500 text-xs mt-1">{errors.position?.message}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
@@ -432,7 +445,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                       ) : null}
                     </>
                   ) : user?.role === 'MANAGER' ? (
-                    <input type="text" className="input-field bg-gray-100" value={formatDepartmentName(normalizeDept(user.employee?.department || ''))} disabled {...register('department')} />
+                    <input type="text" className="input-field bg-gray-100" value={formatDepartmentName(normalizeDept(user?.employee?.department || ''))} disabled {...register('department')} />
                   ) : (
                     <select {...register('department', {
                       setValueAs: v => normalizeDept(v)
@@ -443,19 +456,19 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                       ))}
                     </select>
                   )}
-                  {errors.department && <p className="text-red-500 text-xs mt-1">{errors.department.message}</p>}
+                  {errors?.department && <p className="text-red-500 text-xs mt-1">{errors.department?.message}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Salary</label>
                   <input {...register('salary')} type="number" min="0" step="1000" className={`input-field ${errors.salary ? 'border-red-300' : ''}`} placeholder="Enter annual salary" />
-                  {errors.salary && <p className="text-red-500 text-xs mt-1">{errors.salary.message}</p>}
+                  {errors?.salary && <p className="text-red-500 text-xs mt-1">{errors.salary?.message}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Birth Date</label>
                   <input {...register('birthDate')} type="date" className={`input-field ${errors.birthDate ? 'border-red-300' : ''}`} />
-                  {errors.birthDate && <p className="text-red-500 text-xs mt-1">{errors.birthDate.message}</p>}
+                  {errors?.birthDate && <p className="text-red-500 text-xs mt-1">{errors.birthDate?.message}</p>}
                 </div>
               </div>
               <div>
@@ -503,7 +516,8 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
               </button>
             </div>
             <form onSubmit={handleSubmitEdit(data => {
-              updateEmployeeMutation.mutateAsync({ ...data, id: editingEmployee.id }).then(() => {
+              if (editingEmployee) {
+                updateEmployeeMutation.mutateAsync({ ...data, id: editingEmployee.id }).then(() => {
                 toast.success('Employee updated successfully!');
                 setShowEditModal(false);
                 setEditingEmployee(null);
@@ -516,31 +530,31 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
                   <input {...registerEdit('firstName')} type="text" className={`input-field ${editErrors.firstName ? 'border-red-300' : ''}`} placeholder="Enter first name" />
-                  {editErrors.firstName && <p className="text-red-500 text-xs mt-1">{editErrors.firstName.message}</p>}
+                  {editErrors?.firstName && <p className="text-red-500 text-xs mt-1">{editErrors.firstName?.message}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
                   <input {...registerEdit('lastName')} type="text" className={`input-field ${editErrors.lastName ? 'border-red-300' : ''}`} placeholder="Enter last name" />
-                  {editErrors.lastName && <p className="text-red-500 text-xs mt-1">{editErrors.lastName.message}</p>}
+                  {editErrors?.lastName && <p className="text-red-500 text-xs mt-1">{editErrors.lastName?.message}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                   <input {...registerEdit('email')} type="email" className={`input-field ${editErrors.email ? 'border-red-300' : ''}`} placeholder="Enter email address" />
-                  {editErrors.email && <p className="text-red-500 text-xs mt-1">{editErrors.email.message}</p>}
+                  {editErrors?.email && <p className="text-red-500 text-xs mt-1">{editErrors.email?.message}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Employee Number</label>
                   <input {...registerEdit('employeeNumber')} type="text" className={`input-field ${editErrors.employeeNumber ? 'border-red-300' : ''}`} placeholder="e.g., EMP-021" />
-                  {editErrors.employeeNumber && <p className="text-red-500 text-xs mt-1">{editErrors.employeeNumber.message}</p>}
+                  {editErrors?.employeeNumber && <p className="text-red-500 text-xs mt-1">{editErrors.employeeNumber?.message}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
                   <input {...registerEdit('position')} type="text" className={`input-field ${editErrors.position ? 'border-red-300' : ''}`} placeholder="Enter job position" />
-                  {editErrors.position && <p className="text-red-500 text-xs mt-1">{editErrors.position.message}</p>}
+                  {editErrors?.position && <p className="text-red-500 text-xs mt-1">{editErrors.position?.message}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
@@ -550,19 +564,19 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                       <option key={dep} value={dep}>{formatDepartmentName(dep)}</option>
                     ))}
                   </select>
-                  {editErrors.department && <p className="text-red-500 text-xs mt-1">{editErrors.department.message}</p>}
+                  {editErrors?.department && <p className="text-red-500 text-xs mt-1">{editErrors.department?.message}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Salary</label>
                   <input {...registerEdit('salary')} type="number" min="0" step="1000" className={`input-field ${editErrors.salary ? 'border-red-300' : ''}`} placeholder="Enter annual salary" />
-                  {editErrors.salary && <p className="text-red-500 text-xs mt-1">{editErrors.salary.message}</p>}
+                  {editErrors?.salary && <p className="text-red-500 text-xs mt-1">{editErrors.salary?.message}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Birth Date</label>
                   <input {...registerEdit('birthDate')} type="date" className={`input-field ${editErrors.birthDate ? 'border-red-300' : ''}`} />
-                  {editErrors.birthDate && <p className="text-red-500 text-xs mt-1">{editErrors.birthDate.message}</p>}
+                  {editErrors?.birthDate && <p className="text-red-500 text-xs mt-1">{editErrors.birthDate?.message}</p>}
                 </div>
               </div>
               <div>

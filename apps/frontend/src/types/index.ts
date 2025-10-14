@@ -53,7 +53,7 @@ export interface ApiResponse<T> {
 }
 
 export interface PaginatedResponse<T> {
-  data: T[];
+  employees: T[];
   pagination: {
     currentPage: number;
     totalPages: number;
