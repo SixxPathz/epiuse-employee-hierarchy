@@ -221,13 +221,18 @@ export const useLogin = () => {
     onSuccess: (data) => {
       // Clear existing cache to prevent stale user data
       queryClient.clear();
-      
+
       // Store new authentication data
       localStorage.setItem('auth_token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      
+
       // Immediately set the new user in cache
       queryClient.setQueryData(queryKeys.currentUser, data.user);
+
+      // Redirect all users to dashboard
+      if (typeof window !== 'undefined') {
+        window.location.href = '/dashboard';
+      }
     },
   });
 };
