@@ -16,6 +16,25 @@ interface DashboardStatsProps {
 }
 
 export default function DashboardStats({ user }: DashboardStatsProps) {
+  // State for full employee info
+  const [fullEmployee, setFullEmployee] = useState(user?.employee);
+
+  // Fetch full employee info if manager is missing
+  useEffect(() => {
+    async function fetchEmployee() {
+      if (user?.role === 'EMPLOYEE' && user.employee && !user.employee.manager && user.employee.id) {
+        try {
+          const response = await api.get(`/api/employees/${user.employee.id}`);
+          if (response.data?.employee) {
+            setFullEmployee(response.data.employee);
+          }
+        } catch (err) {
+          // ignore
+        }
+      }
+    }
+    fetchEmployee();
+  }, [user]);
   // Get user permissions
   const permissions = getUserPermissions(user?.role || 'EMPLOYEE');
 
@@ -45,10 +64,10 @@ export default function DashboardStats({ user }: DashboardStatsProps) {
   const directReports = user?.role === 'MANAGER' && user.employee?.subordinates ? user.employee.subordinates : [];
 
   // Personal info for employee
-  const personalInfo = user?.role === 'EMPLOYEE' && user.employee ? [
-    { label: 'Position', value: user.employee.position },
-    { label: 'Manager', value: user.employee.manager && user.employee.manager.firstName ? `${user.employee.manager.firstName} ${user.employee.manager.lastName}` : (user.employee.managerId ? 'Manager Assigned' : 'N/A') },
-    { label: 'Salary', value: user.employee.salary ? formatCurrency(user.employee.salary) : 'N/A' },
+  const personalInfo = user?.role === 'EMPLOYEE' && fullEmployee ? [
+    { label: 'Position', value: fullEmployee.position },
+    { label: 'Manager', value: fullEmployee.manager && fullEmployee.manager.firstName ? `${fullEmployee.manager.firstName} ${fullEmployee.manager.lastName}` : (fullEmployee.managerId ? 'Manager Assigned' : 'N/A') },
+    { label: 'Salary', value: fullEmployee.salary ? formatCurrency(fullEmployee.salary) : 'N/A' },
   ] : [];
 
   // Role-specific stats configuration
