@@ -454,7 +454,7 @@ router.post('/', [
   body('salary').isFloat({ min: 0 }),
   body('position').trim().isLength({ min: 1 }),
   body('managerId').optional().isString(),
-  body('department').isString().isIn(['technology', 'human-resources', 'sales', 'marketing', 'management'])
+  body('department').isString().trim().notEmpty(), // Allow any non-empty string
 ], async (req: Request, res: Response) => {
   try {
     const errors = validationResult(req);
@@ -645,7 +645,7 @@ router.put('/:id', [
   body('salary').optional().isFloat({ min: 0 }),
   body('position').optional().trim().isLength({ min: 1 }),
   body('managerId').optional().isString(),
-  body('department').optional().isString().isIn(['technology', 'human-resources', 'sales', 'marketing', 'management'])
+  body('department').optional().isString().trim(), // Allow any string
 ], async (req: Request, res: Response) => {
   try {
     const errors = validationResult(req);
@@ -1117,14 +1117,12 @@ router.get('/hierarchy/tree', async (req: Request, res: Response) => {
 // Get available departments
 router.get('/departments', async (req: Request, res: Response) => {
   try {
-    const departments = [
-      { id: 'technology', name: 'Technology' },
-      { id: 'human-resources', name: 'Human Resources' },
-      { id: 'sales', name: 'Sales' },
-      { id: 'marketing', name: 'Marketing' },
-      { id: 'management', name: 'Management' }
-    ];
-    
+    // Get all unique department names from employees table
+    const departmentStats = await prisma.employee.groupBy({
+      by: ['department'],
+      _count: { id: true }
+    });
+    const departments = departmentStats.map(stat => ({ id: stat.department, name: stat.department.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) }));
     res.json({ departments });
   } catch (error) {
     console.error('Get departments error:', error);
