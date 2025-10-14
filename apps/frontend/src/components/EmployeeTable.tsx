@@ -43,6 +43,10 @@ interface EmployeeTableProps {
 }
 
 export default function EmployeeTable({ user }: EmployeeTableProps) {
+  // For Add Manager and Add Department features
+  const [addType, setAddType] = useState<'employee' | 'manager'>('employee');
+  const [customDepartment, setCustomDepartment] = useState('');
+  const [showCustomDepartment, setShowCustomDepartment] = useState(false);
   // Multi-field search state
   const [searchName, setSearchName] = useState('');
   const [searchEmployeeNumber, setSearchEmployeeNumber] = useState('');
@@ -338,13 +342,26 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
           {canAddEmployee && (
-            <button 
-              onClick={() => setShowAddModal(true)}
-              className="btn-primary inline-flex items-center space-x-2"
-            >
-              <PlusIcon className="h-5 w-5" />
-              <span>Add Employee</span>
-            </button>
+            <>
+              <button 
+                onClick={() => { setShowAddModal(true); setAddType('employee'); }}
+                className="btn-primary inline-flex items-center space-x-2"
+              >
+                <PlusIcon className="h-5 w-5" />
+                <span>Add Employee</span>
+              </button>
+              {user?.role === 'ADMIN' && (
+                <>
+                  <button
+                    onClick={() => { setShowAddModal(true); setAddType('manager'); }}
+                    className="btn-secondary inline-flex items-center space-x-2"
+                  >
+                    <PlusIcon className="h-5 w-5" />
+                    <span>Add Manager</span>
+                  </button>
+                </>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -537,7 +554,9 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                     {...register('position')}
                     type="text"
                     className={`input-field ${errors.position ? 'border-red-300' : ''}`}
-                    placeholder="Enter job position"
+                    placeholder={addType === 'manager' ? 'Manager Position' : 'Enter job position'}
+                    value={addType === 'manager' ? 'Manager' : undefined}
+                    readOnly={addType === 'manager'}
                   />
                   {errors.position && (
                     <p className="text-red-500 text-xs mt-1">{errors.position.message}</p>
@@ -556,6 +575,14 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                     className={`input-field ${errors.department ? 'border-red-300' : ''}`}
                     disabled={user?.role === 'MANAGER'}
                     value={user?.role === 'MANAGER' ? user.employee?.department : undefined}
+                    onChange={e => {
+                      if (e.target.value === 'other') {
+                        setShowCustomDepartment(true);
+                      } else {
+                        setShowCustomDepartment(false);
+                        setCustomDepartment('');
+                      }
+                    }}
                   >
                     <option value="">Select Department</option>
                     <option value="management">Management</option>
@@ -563,7 +590,17 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                     <option value="human-resources">Human Resources</option>
                     <option value="sales">Sales</option>
                     <option value="marketing">Marketing</option>
+                    <option value="other">Other...</option>
                   </select>
+                  {showCustomDepartment && (
+                    <input
+                      type="text"
+                      className="input-field mt-2"
+                      placeholder="Enter new department"
+                      value={customDepartment}
+                      onChange={e => setCustomDepartment(e.target.value)}
+                    />
+                  )}
                   {errors.department && (
                     <p className="text-red-500 text-xs mt-1">{errors.department.message}</p>
                   )}
