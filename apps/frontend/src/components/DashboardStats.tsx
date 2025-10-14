@@ -37,9 +37,8 @@ export default function DashboardStats({ user }: DashboardStatsProps) {
 
   // Quick actions for admin
   const adminQuickActions = [
-    { label: 'Add Employee', href: '/employees/new' },
-    { label: 'Export Data', href: '/employees/export' },
-    { label: 'Manage Permissions', href: '/settings' },
+    { label: 'Add Employee', href: '/employees' },
+    { label: 'Export Data', href: '/settings#export' },
   ];
 
   // Get direct reports for manager
@@ -48,7 +47,7 @@ export default function DashboardStats({ user }: DashboardStatsProps) {
   // Personal info for employee
   const personalInfo = user?.role === 'EMPLOYEE' && user.employee ? [
     { label: 'Position', value: user.employee.position },
-    { label: 'Manager', value: user.employee.manager ? `${user.employee.manager.firstName} ${user.employee.manager.lastName}` : 'N/A' },
+    { label: 'Manager', value: user.employee.manager && user.employee.manager.firstName ? `${user.employee.manager.firstName} ${user.employee.manager.lastName}` : (user.employee.managerId ? 'Manager Assigned' : 'N/A') },
     { label: 'Salary', value: user.employee.salary ? formatCurrency(user.employee.salary) : 'N/A' },
   ] : [];
 
@@ -288,15 +287,7 @@ export default function DashboardStats({ user }: DashboardStatsProps) {
         </div>
       )}
 
-      {/* Placeholders for future features */}
-      <div className="card">
-        <div className="card-header">
-          <h3 className="text-lg font-semibold text-gray-900">Recent Activity & Leave Balance</h3>
-        </div>
-        <div className="card-body">
-          <div className="text-gray-500">Feature coming soon: recent logins, leave requests, company news, and more.</div>
-        </div>
-      </div>
+      {/* ...no recent activity card... */}
     </div>
   );
 }
