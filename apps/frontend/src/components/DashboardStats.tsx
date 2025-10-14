@@ -16,13 +16,14 @@ interface DashboardStatsProps {
 }
 
 export default function DashboardStats({ user }: DashboardStatsProps) {
-  // State for full employee info
+  // State for full employee info (for both employee and manager dashboards)
   const [fullEmployee, setFullEmployee] = useState(user?.employee);
 
-  // Fetch full employee info if manager is missing
+  // Fetch full employee info if manager/subordinates are missing
   useEffect(() => {
     async function fetchEmployee() {
-      if (user?.role === 'EMPLOYEE' && user.employee && !user.employee.manager && user.employee.id) {
+      if ((user?.role === 'EMPLOYEE' && user.employee && !user.employee.manager && user.employee.id) ||
+          (user?.role === 'MANAGER' && user.employee && (!user.employee.subordinates || user.employee.subordinates.length === 0) && user.employee.id)) {
         try {
           const response = await api.get(`/api/employees/${user.employee.id}`);
           if (response.data?.employee) {
@@ -61,7 +62,7 @@ export default function DashboardStats({ user }: DashboardStatsProps) {
   ];
 
   // Get direct reports for manager
-  const directReports = user?.role === 'MANAGER' && user.employee?.subordinates ? user.employee.subordinates : [];
+  const directReports = user?.role === 'MANAGER' && fullEmployee?.subordinates ? fullEmployee.subordinates : [];
 
   // Personal info for employee
   const personalInfo = user?.role === 'EMPLOYEE' && fullEmployee ? [
