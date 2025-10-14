@@ -49,7 +49,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
   const [showCustomDepartment, setShowCustomDepartment] = useState(false);
   const [searchName, setSearchName] = useState('');
   const [searchEmployeeNumber, setSearchEmployeeNumber] = useState('');
-  const [searchPosition, setSearchPosition] = useState('');
+  // Removed searchPosition state (search by position is deprecated)
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [sortBy, setSortBy] = useState('firstName');
   const [sortOrder, setSortOrder] = useState('asc');
@@ -180,7 +180,6 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
     setSearchParams({
       name: searchName || undefined,
       employeeNumber: searchEmployeeNumber || undefined,
-      position: searchPosition || undefined,
       department: selectedDepartment || undefined,
     });
   };
@@ -189,7 +188,6 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
   const handleClearSearch = () => {
     setSearchName('');
     setSearchEmployeeNumber('');
-    setSearchPosition('');
     setSelectedDepartment('');
     setSearchParams({});
   };
@@ -291,13 +289,6 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
               placeholder="Employee number..."
               value={searchEmployeeNumber}
               onChange={e => setSearchEmployeeNumber(e.target.value)}
-            />
-            <input
-              type="text"
-              className="input-field"
-              placeholder="Position..."
-              value={searchPosition}
-              onChange={e => setSearchPosition(e.target.value)}
             />
             <select
               className="input-field"
