@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -88,20 +89,31 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
   });
 
   // Departments
+  // Normalize department names (case-insensitive, trimmed)
+  const normalizeDept = (dept: string) => dept.trim().toLowerCase().replace(/\s+/g, '-');
+  // Memoized department-to-manager map for fast lookup
+  const departmentManagerMap = useMemo(() => {
+    const map = new Map<string, Employee>();
+    allEmployees.forEach(emp => {
+      if (emp.department && (emp.position.toLowerCase().includes('manager') || emp.position.toLowerCase().includes('head of') || emp.position.toLowerCase().includes('director'))) {
+        map.set(normalizeDept(emp.department), emp);
+      }
+    });
+    return map;
+  }, [allEmployees]);
+
   const departmentSet = new Set<string>();
   allEmployees.forEach(emp => {
-    if (emp.department) departmentSet.add(emp.department);
+    if (emp.department) departmentSet.add(normalizeDept(emp.department));
   });
   const departments = Array.from(departmentSet);
-  const departmentsWithManagers = new Set<string>(
-    allEmployees.filter(emp => emp.position.toLowerCase().includes('manager')).map(emp => emp.department)
-  );
+  const departmentsWithManagers = new Set<string>(Array.from(departmentManagerMap.keys()));
   const availableDepartmentsForManager = departments.filter(dep => !departmentsWithManagers.has(dep));
-  const isDuplicateDepartment = customDepartment && departments.includes(customDepartment.trim());
+  const isDuplicateDepartment = customDepartment && departments.includes(normalizeDept(customDepartment));
 
   // Managers in selected department
   const managersInSelectedDepartment = (managersData?.employees || []).filter(
-    (mgr: Employee) => mgr.department === (showCustomDepartment ? customDepartment : (addType === 'manager' ? undefined : (selectedDepartment || '')))
+    (mgr: Employee) => normalizeDept(mgr.department) === normalizeDept(showCustomDepartment ? customDepartment : (addType === 'manager' ? '' : (selectedDepartment || '')))
   );
   const noManagersExist = (managersData?.employees || []).length === 0;
 
@@ -158,10 +170,10 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
 
   // Helper function to format department names for display
   const formatDepartmentName = (dept: string): string => {
+    // Display normalized department names in readable format
     return dept
-      .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+      .replace(/-/g, ' ')
+      .replace(/\b\w/g, c => c.toUpperCase());
   };
 
   // Handle search button click
@@ -364,7 +376,34 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
               </button>
             </div>
             <form onSubmit={handleSubmit(data => {
-              addEmployeeMutation.mutateAsync(data).then(() => {
+              // If adding a manager, set managerId to CEO
+              let payload = { ...data };
+              if (addType === 'manager' && managersData?.employees) {
+                const ceo = managersData.employees.find((emp: Employee) => emp.position.toLowerCase().includes('ceo'));
+                if (ceo) {
+                  payload.managerId = ceo.id;
+                }
+              }
+              // If adding an employee, auto-assign managerId
+              if (addType === 'employee') {
+                let dept = normalizeDept(payload.department);
+                if (user?.role === 'MANAGER' && user.employee?.id) {
+                  payload.managerId = user.employee.id;
+                  payload.department = user.employee.department;
+                  dept = normalizeDept(user.employee.department);
+                } else if (user?.role === 'ADMIN') {
+                  const deptManager = departmentManagerMap.get(dept);
+                  if (deptManager) {
+                    payload.managerId = deptManager.id;
+                  }
+                }
+                // Prevent adding employee if no manager exists for department
+                if (!payload.managerId) {
+                  toast.error('No manager exists for the selected department. Please add a manager first.');
+                  return;
+                }
+              }
+              addEmployeeMutation.mutateAsync(payload).then(() => {
                 toast.success('Employee added successfully!');
                 setShowAddModal(false);
                 reset();
@@ -405,9 +444,20 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
                   {addType === 'manager' ? (
-                    <input {...register('department')} type="text" className={`input-field ${errors.department ? 'border-red-300' : ''}`} placeholder="Enter new department" />
+                    <>
+                      <input {...register('department', {
+                        setValueAs: v => normalizeDept(v)
+                      })} type="text" className={`input-field ${errors.department ? 'border-red-300' : ''}`} placeholder="Enter new department" />
+                      {isDuplicateDepartment ? (
+                        <p className="text-red-500 text-xs mt-1">Department already exists (case-insensitive).</p>
+                      ) : null}
+                    </>
+                  ) : user?.role === 'MANAGER' ? (
+                    <input type="text" className="input-field bg-gray-100" value={formatDepartmentName(normalizeDept(user.employee?.department || ''))} disabled {...register('department')} />
                   ) : (
-                    <select {...register('department')} className={`input-field ${errors.department ? 'border-red-300' : ''}`}> 
+                    <select {...register('department', {
+                      setValueAs: v => normalizeDept(v)
+                    })} className={`input-field ${errors.department ? 'border-red-300' : ''}`}> 
                       <option value="">Select Department</option>
                       {departments.map(dep => (
                         <option key={dep} value={dep}>{formatDepartmentName(dep)}</option>
@@ -430,20 +480,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 </div>
               </div>
               <div>
-                {/* Manager selection hidden in Add Employee modal; auto-assign based on department */}
-                {addType === 'employee' && user?.role === 'ADMIN' ? (
-                  <>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Manager (Auto-selected by department)</label>
-                    <select {...register('managerId')} className="input-field">
-                      <option value="">Select a manager</option>
-                      {managersData?.employees?.filter((manager: Employee) => manager.department === (getValues('department') || selectedDepartment)).map((manager: Employee) => (
-                        <option key={manager.id} value={manager.id}>
-                          {manager.firstName} {manager.lastName} - {manager.position}
-                        </option>
-                      ))}
-                    </select>
-                  </>
-                ) : null}
+                {/* Manager selection removed from Add Employee modal; auto-assign managerId based on department */}
               </div>
               <div className="flex justify-end space-x-3 pt-4">
                 <button

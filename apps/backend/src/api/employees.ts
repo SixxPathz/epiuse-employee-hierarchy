@@ -470,13 +470,15 @@ router.post('/', [
       return res.status(403).json({ error: 'Employees cannot create new employee records' });
     }
 
-    // Validate department and manager combination
+    // Enforce backend rules for manager/employee creation
     if (managerId) {
       const manager = await prisma.employee.findUnique({
         where: { id: managerId },
         select: {
           id: true,
-          department: true
+          department: true,
+          position: true,
+          managerId: true
         }
       });
 
@@ -484,9 +486,32 @@ router.post('/', [
         return res.status(400).json({ error: 'Manager not found' });
       }
 
+      // Prevent cycles: manager cannot be a subordinate of employee
+      // (not relevant for creation, but check if manager is not self)
+      if (managerId === email) {
+        return res.status(400).json({ error: 'Employee cannot be their own manager.' });
+      }
+
       // Get manager's department directly from the department field
       const managerDepartment = manager.department;
-      
+
+      // Enforce unique manager per department
+      if (manager.position.toLowerCase().includes('manager') || manager.position.toLowerCase().includes('head of') || manager.position.toLowerCase().includes('director')) {
+        const existingManager = await prisma.employee.findFirst({
+          where: {
+            department: department,
+            OR: [
+              { position: { contains: 'manager', mode: 'insensitive' } },
+              { position: { contains: 'head of', mode: 'insensitive' } },
+              { position: { contains: 'director', mode: 'insensitive' } }
+            ]
+          }
+        });
+        if (existingManager && existingManager.id !== managerId) {
+          return res.status(400).json({ error: `Department '${department}' already has a manager.` });
+        }
+      }
+
       // Validate department-manager alignment
       if (currentUser.role === 'MANAGER') {
         // Managers can only assign employees to themselves within their department
@@ -516,6 +541,11 @@ router.post('/', [
           });
         }
       }
+    }
+
+    // Prevent employees without manager (except CEO)
+    if (!managerId && position.toLowerCase().indexOf('ceo') === -1) {
+      return res.status(400).json({ error: 'Employees must have a manager assigned, except for the CEO.' });
     }
 
     // Check for unique constraints
@@ -711,21 +741,60 @@ router.put('/:id', [
       }
 
       const manager = await prisma.employee.findUnique({
-        where: { id: updateData.managerId }
+        where: { id: updateData.managerId },
+        select: { id: true, department: true, position: true }
       });
 
       if (!manager) {
         return res.status(400).json({ error: 'Manager not found' });
       }
+
+      // Enforce unique manager per department on department change for managers
+      if (manager.position.toLowerCase().includes('manager') || manager.position.toLowerCase().includes('head of') || manager.position.toLowerCase().includes('director')) {
+        const targetDepartment = updateData.department || manager.department;
+        const existingManager = await prisma.employee.findFirst({
+          where: {
+            department: targetDepartment,
+            OR: [
+              { position: { contains: 'manager', mode: 'insensitive' } },
+              { position: { contains: 'head of', mode: 'insensitive' } },
+              { position: { contains: 'director', mode: 'insensitive' } }
+            ]
+          }
+        });
+        if (existingManager && existingManager.id !== manager.id) {
+          return res.status(400).json({ error: `Department '${targetDepartment}' already has a manager.` });
+        }
+      }
     }
 
-    // Prepare update data
+    // Auto-update managerId if department changes
     const finalUpdateData: any = { ...updateData };
     if (finalUpdateData.birthDate) {
       finalUpdateData.birthDate = new Date(finalUpdateData.birthDate);
     }
     if (finalUpdateData.salary) {
       finalUpdateData.salary = parseFloat(finalUpdateData.salary);
+    }
+    // If department is being changed, auto-assign managerId for new department
+    if (finalUpdateData.department && finalUpdateData.department !== currentEmployee.department) {
+      // Find manager for new department
+      const newDeptManager = await prisma.employee.findFirst({
+        where: {
+          department: finalUpdateData.department,
+          OR: [
+            { position: { contains: 'manager', mode: 'insensitive' } },
+            { position: { contains: 'head of', mode: 'insensitive' } },
+            { position: { contains: 'director', mode: 'insensitive' } }
+          ]
+        }
+      });
+      if (newDeptManager) {
+        finalUpdateData.managerId = newDeptManager.id;
+      } else {
+        // If no manager exists, block department change
+        return res.status(400).json({ error: 'Cannot change department: no manager exists for the selected department.' });
+      }
     }
 
     // Handle email updates - need to update both user and employee due to foreign key constraint
@@ -820,11 +889,30 @@ router.delete('/:id', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Employee not found' });
     }
 
-    // Check if employee has subordinates
+    // Prevent deletion of managers with employees assigned
     if (currentEmployee.subordinates.length > 0) {
       return res.status(400).json({ 
-        error: 'Cannot delete employee with subordinates. Please reassign subordinates first.' 
+        error: 'Cannot delete manager with employees assigned. Please reassign or remove all subordinates before deleting this manager.' 
       });
+    }
+
+    // Enforce CEO always exists
+    // CEO is defined as employee with no managerId and position containing 'ceo' (case-insensitive)
+    const isCEO = !currentEmployee.managerId && currentEmployee.position.toLowerCase().includes('ceo');
+    if (isCEO) {
+      // Check if there are other CEOs in the org
+      const otherCEOs = await prisma.employee.findMany({
+        where: {
+          id: { not: id },
+          managerId: null,
+          position: { contains: 'ceo', mode: 'insensitive' }
+        }
+      });
+      if (otherCEOs.length === 0) {
+        return res.status(400).json({
+          error: 'Cannot delete the only CEO. The organization must always have a CEO.'
+        });
+      }
     }
 
     // Store employee data for audit log before deletion
