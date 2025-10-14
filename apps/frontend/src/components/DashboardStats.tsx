@@ -18,7 +18,7 @@ interface DashboardStatsProps {
 export default function DashboardStats({ user }: DashboardStatsProps) {
   // Get user permissions
   const permissions = getUserPermissions(user?.role || 'EMPLOYEE');
-  
+
   // Helper function to format department names
   const formatDepartmentName = (dept: string): string => {
     return dept
@@ -26,7 +26,7 @@ export default function DashboardStats({ user }: DashboardStatsProps) {
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
   };
-  
+
   const { data: insights, isLoading } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
@@ -34,6 +34,23 @@ export default function DashboardStats({ user }: DashboardStatsProps) {
       return response.data;
     },
   });
+
+  // Quick actions for admin
+  const adminQuickActions = [
+    { label: 'Add Employee', href: '/employees/new' },
+    { label: 'Export Data', href: '/employees/export' },
+    { label: 'Manage Permissions', href: '/settings' },
+  ];
+
+  // Get direct reports for manager
+  const directReports = user?.role === 'MANAGER' && user.employee?.subordinates ? user.employee.subordinates : [];
+
+  // Personal info for employee
+  const personalInfo = user?.role === 'EMPLOYEE' && user.employee ? [
+    { label: 'Position', value: user.employee.position },
+    { label: 'Manager', value: user.employee.manager ? `${user.employee.manager.firstName} ${user.employee.manager.lastName}` : 'N/A' },
+    { label: 'Salary', value: user.employee.salary ? formatCurrency(user.employee.salary) : 'N/A' },
+  ] : [];
 
   // Role-specific stats configuration
   const getStatsForRole = () => {
@@ -87,6 +104,13 @@ export default function DashboardStats({ user }: DashboardStatsProps) {
             ? formatDepartmentName(user.employee.department)
             : 'N/A',
           icon: UserGroupIcon,
+          color: 'text-company-navy',
+          bgColor: 'bg-gray-50',
+        },
+        {
+          name: 'Direct Reports',
+          value: directReports.length,
+          icon: UsersIcon,
           color: 'text-company-navy',
           bgColor: 'bg-gray-50',
         },
@@ -175,6 +199,64 @@ export default function DashboardStats({ user }: DashboardStatsProps) {
         ))}
       </div>
 
+      {/* Quick Actions for Admin */}
+      {user?.role === 'ADMIN' && (
+        <div className="card">
+          <div className="card-header">
+            <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+          </div>
+          <div className="card-body flex space-x-4">
+            {adminQuickActions.map(action => (
+              <a key={action.label} href={action.href} className="btn btn-primary">
+                {action.label}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Direct Reports for Manager */}
+      {user?.role === 'MANAGER' && (
+        <div className="card">
+          <div className="card-header">
+            <h3 className="text-lg font-semibold text-gray-900">Direct Reports</h3>
+          </div>
+          <div className="card-body">
+            {directReports.length > 0 ? (
+              <ul className="space-y-2">
+                {directReports.map((emp: any) => (
+                  <li key={emp.id} className="flex items-center justify-between">
+                    <span>{emp.firstName} {emp.lastName}</span>
+                    <span className="text-xs text-gray-500">{emp.position}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="text-gray-500">No direct reports</div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Personal Info for Employee */}
+      {user?.role === 'EMPLOYEE' && (
+        <div className="card">
+          <div className="card-header">
+            <h3 className="text-lg font-semibold text-gray-900">Personal Info</h3>
+          </div>
+          <div className="card-body">
+            <ul className="space-y-2">
+              {personalInfo.map(info => (
+                <li key={info.label} className="flex items-center justify-between">
+                  <span>{info.label}</span>
+                  <span className="text-xs text-gray-500">{info.value}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
       {/* Department Distribution */}
       {insights?.departmentDistribution && (
         <div className="card">
@@ -205,6 +287,16 @@ export default function DashboardStats({ user }: DashboardStatsProps) {
           </div>
         </div>
       )}
+
+      {/* Placeholders for future features */}
+      <div className="card">
+        <div className="card-header">
+          <h3 className="text-lg font-semibold text-gray-900">Recent Activity & Leave Balance</h3>
+        </div>
+        <div className="card-body">
+          <div className="text-gray-500">Feature coming soon: recent logins, leave requests, company news, and more.</div>
+        </div>
+      </div>
     </div>
   );
 }
