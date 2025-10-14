@@ -224,7 +224,7 @@ export default function Layout({ children, user: initialUser }: LayoutProps) {
                     <img 
                       src="/logo.png" 
                       alt="EPI-USE Logo" 
-                      className="h-10 w-auto mr-1"
+                      className="h-14 w-auto mr-1"
                     />
                     <span className="text-2xl font-bold text-epi-navy">Nexus</span>
                   </div>
