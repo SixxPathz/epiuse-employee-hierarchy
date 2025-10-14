@@ -927,12 +927,32 @@ router.delete('/:id', async (req: Request, res: Response) => {
       managerId: currentEmployee.managerId
     };
 
-    // Delete employee
-    await prisma.employee.delete({
-      where: { id }
+    // Delete all related data for employee
+    await prisma.$transaction(async (tx) => {
+      // Detach all subordinates (set their managerId to null)
+      await tx.employee.updateMany({
+        where: { managerId: id },
+        data: { managerId: null }
+      });
+
+      // Delete profile picture file if exists (optional, if stored on disk)
+      // TODO: Implement file deletion if needed (currently only DB field cleared)
+      if (currentEmployee.profilePicture) {
+        await tx.employee.update({
+          where: { id },
+          data: { profilePicture: null }
+        });
+      }
+
+      // Delete employee
+      await tx.employee.delete({ where: { id } });
+      // Delete user by email (if exists)
+      if (currentEmployee.email) {
+        await tx.user.deleteMany({ where: { email: currentEmployee.email } });
+      }
     });
 
-    res.json({ message: 'Employee deleted successfully' });
+    res.json({ message: 'Employee, user, and all related data deleted successfully' });
   } catch (error) {
     console.error('Delete employee error:', error);
     res.status(500).json({ error: 'Internal server error' });
