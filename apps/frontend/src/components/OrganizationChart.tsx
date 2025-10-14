@@ -13,7 +13,7 @@ import api from '../utils/api';
 export default function OrganizationChart() {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
-  const [view, setView] = useState<'tree' | 'compact'>('tree');
+  // Only tree view is enabled
 
   const { data: hierarchy, isLoading } = useQuery({
     queryKey: ['hierarchy'],
@@ -195,29 +195,7 @@ export default function OrganizationChart() {
               <p className="text-gray-600">Interactive company hierarchy with search</p>
             </div>
             
-            {/* View Toggle */}
-            <div className="flex space-x-2">
-              <button
-                onClick={() => setView('tree')}
-                className={`px-3 py-2 rounded-md text-sm font-medium ${
-                  view === 'tree' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Tree View
-              </button>
-              <button
-                onClick={() => setView('compact')}
-                className={`px-3 py-2 rounded-md text-sm font-medium ${
-                  view === 'compact' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                List View
-              </button>
-            </div>
+            {/* Only tree view, no toggle */}
           </div>
           
           {/* Search Bar */}
@@ -238,15 +216,9 @@ export default function OrganizationChart() {
         <div className="card-body">
           {hierarchy ? (
             <div className="min-h-96">
-              {view === 'tree' ? (
-                <div className="space-y-2">
-                  {renderTreeNode(hierarchy)}
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredNodes.map(node => renderCompactNode(node))}
-                </div>
-              )}
+              <div className="space-y-2">
+                {renderTreeNode(hierarchy)}
+              </div>
               
               {searchTerm && filteredNodes.length === 0 && (
                 <div className="text-center py-12">
