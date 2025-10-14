@@ -57,8 +57,13 @@ export default function DashboardStats({ user }: DashboardStatsProps) {
 
   // Quick actions for admin
   const adminQuickActions = [
-    { label: 'Add Employee', href: '/employees' },
-    { label: 'Export Data', href: '/settings#export' },
+    { label: 'Add Employee', action: () => {
+      // Navigate to employees page and open add modal
+      window.location.href = '/employees?add=1';
+    } },
+    { label: 'Export Data', action: () => {
+      window.location.href = '/settings?export=1';
+    } },
   ];
 
   // Get direct reports for manager
@@ -226,9 +231,13 @@ export default function DashboardStats({ user }: DashboardStatsProps) {
           </div>
           <div className="card-body flex space-x-4">
             {adminQuickActions.map(action => (
-              <a key={action.label} href={action.href} className="btn btn-primary">
+              <button
+                key={action.label}
+                className="btn btn-primary"
+                onClick={action.action}
+              >
                 {action.label}
-              </a>
+              </button>
             ))}
           </div>
         </div>
