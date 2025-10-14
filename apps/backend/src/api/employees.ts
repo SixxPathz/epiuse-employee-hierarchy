@@ -483,20 +483,10 @@ router.post('/', [
       });
 
       if (!manager) {
-        return res.status(400).json({ error: 'Manager not found' });
-      }
-
-      // Prevent cycles: manager cannot be a subordinate of employee
-      // (not relevant for creation, but check if manager is not self)
-      if (managerId === email) {
-        return res.status(400).json({ error: 'Employee cannot be their own manager.' });
-      }
-
-      // Get manager's department directly from the department field
-      const managerDepartment = manager.department;
-
-      // Enforce unique manager per department
-      if (manager.position.toLowerCase().includes('manager') || manager.position.toLowerCase().includes('head of') || manager.position.toLowerCase().includes('director')) {
+        // If adding a manager for a new department, allow managerId to be null or CEO to be missing
+        // Only block if managerId is not null and not found
+        // For first manager in a new department, managerId may be CEO or null
+        // If managerId is not found, allow creation if position is manager/head/director and department is new
         const existingManager = await prisma.employee.findFirst({
           where: {
             department: department,
@@ -507,38 +497,64 @@ router.post('/', [
             ]
           }
         });
-        if (existingManager && existingManager.id !== managerId) {
+        if (existingManager) {
           return res.status(400).json({ error: `Department '${department}' already has a manager.` });
         }
-      }
-
-      // Validate department-manager alignment
-      if (currentUser.role === 'MANAGER') {
-        // Managers can only assign employees to themselves within their department
-        const currentManager = await prisma.user.findUnique({
-          where: { id: currentUser.userId },
-          include: { employee: true }
-        });
-
-        if (currentManager?.employee?.id !== managerId) {
-          return res.status(403).json({ 
-            error: 'Managers can only assign employees to themselves' 
-          });
+        // Otherwise, allow creation (first manager for new department)
+      } else {
+        // Prevent cycles: manager cannot be a subordinate of employee
+        if (managerId === email) {
+          return res.status(400).json({ error: 'Employee cannot be their own manager.' });
         }
-        
-        // Ensure the selected department matches the manager's department
-        if (managerDepartment !== department) {
-          return res.status(400).json({ 
-            error: `Selected manager is not in the ${department} department` 
+
+        // Get manager's department directly from the department field
+        const managerDepartment = manager.department;
+
+        // Enforce unique manager per department
+        if (manager.position.toLowerCase().includes('manager') || manager.position.toLowerCase().includes('head of') || manager.position.toLowerCase().includes('director')) {
+          const existingManager = await prisma.employee.findFirst({
+            where: {
+              department: department,
+              OR: [
+                { position: { contains: 'manager', mode: 'insensitive' } },
+                { position: { contains: 'head of', mode: 'insensitive' } },
+                { position: { contains: 'director', mode: 'insensitive' } }
+              ]
+            }
           });
+          if (existingManager && existingManager.id !== managerId) {
+            return res.status(400).json({ error: `Department '${department}' already has a manager.` });
+          }
         }
-      } else if (currentUser.role === 'ADMIN') {
-        // CEO/Admin can assign across departments but must respect department rules
-        // CEO (management department) can manage any department
-        if (managerDepartment !== 'management' && managerDepartment !== department) {
-          return res.status(400).json({ 
-            error: `Selected manager is not authorized for the ${department} department` 
+
+        // Validate department-manager alignment
+        if (currentUser.role === 'MANAGER') {
+          // Managers can only assign employees to themselves within their department
+          const currentManager = await prisma.user.findUnique({
+            where: { id: currentUser.userId },
+            include: { employee: true }
           });
+
+          if (currentManager?.employee?.id !== managerId) {
+            return res.status(403).json({ 
+              error: 'Managers can only assign employees to themselves' 
+            });
+          }
+          
+          // Ensure the selected department matches the manager's department
+          if (managerDepartment !== department) {
+            return res.status(400).json({ 
+              error: `Selected manager is not in the ${department} department` 
+            });
+          }
+        } else if (currentUser.role === 'ADMIN') {
+          // CEO/Admin can assign across departments but must respect department rules
+          // CEO (management department) can manage any department
+          if (managerDepartment !== 'management' && managerDepartment !== department) {
+            return res.status(400).json({ 
+              error: `Selected manager is not authorized for the ${department} department` 
+            });
+          }
         }
       }
     }
