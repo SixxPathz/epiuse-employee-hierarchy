@@ -370,7 +370,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
               let payload = { ...data };
               if (addType === 'manager') {
                 if (managersData?.employees) {
-                  const ceo = managersData.employees.find((emp: Employee) => emp.position.toLowerCase().includes('ceo'));
+                  const ceo = managersData.employees.find((emp: Employee) => emp.position.toLowerCase().includes('chief executive officer'));
                   payload.managerId = ceo ? ceo.id : undefined;
                 } else {
                   payload.managerId = undefined;
