@@ -371,7 +371,70 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 toast.error('Failed to add employee');
               });
             })} className="space-y-4">
-              {/* ...form fields as before... */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                  <input {...register('firstName')} type="text" className={`input-field ${errors.firstName ? 'border-red-300' : ''}`} placeholder="Enter first name" />
+                  {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName.message}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                  <input {...register('lastName')} type="text" className={`input-field ${errors.lastName ? 'border-red-300' : ''}`} placeholder="Enter last name" />
+                  {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName.message}</p>}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input {...register('email')} type="email" className={`input-field ${errors.email ? 'border-red-300' : ''}`} placeholder="Enter email address" />
+                  {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Employee Number</label>
+                  <input {...register('employeeNumber')} type="text" className={`input-field ${errors.employeeNumber ? 'border-red-300' : ''}`} placeholder="e.g., EMP-021" />
+                  {errors.employeeNumber && <p className="text-red-500 text-xs mt-1">{errors.employeeNumber.message}</p>}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
+                  <input {...register('position')} type="text" className={`input-field ${errors.position ? 'border-red-300' : ''}`} placeholder="Enter job position" />
+                  {errors.position && <p className="text-red-500 text-xs mt-1">{errors.position.message}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                  <select {...register('department')} className={`input-field ${errors.department ? 'border-red-300' : ''}`}> 
+                    <option value="">Select Department</option>
+                    {departments.map(dep => (
+                      <option key={dep} value={dep}>{formatDepartmentName(dep)}</option>
+                    ))}
+                  </select>
+                  {errors.department && <p className="text-red-500 text-xs mt-1">{errors.department.message}</p>}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Salary</label>
+                  <input {...register('salary')} type="number" min="0" step="1000" className={`input-field ${errors.salary ? 'border-red-300' : ''}`} placeholder="Enter annual salary" />
+                  {errors.salary && <p className="text-red-500 text-xs mt-1">{errors.salary.message}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Birth Date</label>
+                  <input {...register('birthDate')} type="date" className={`input-field ${errors.birthDate ? 'border-red-300' : ''}`} />
+                  {errors.birthDate && <p className="text-red-500 text-xs mt-1">{errors.birthDate.message}</p>}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Manager (Optional)</label>
+                <select {...register('managerId')} className="input-field">
+                  <option value="">Select a manager</option>
+                  {managersData?.employees?.map((manager: Employee) => (
+                    <option key={manager.id} value={manager.id}>
+                      {manager.firstName} {manager.lastName} - {manager.position}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"
@@ -423,7 +486,70 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 toast.error('Failed to update employee');
               });
             })} className="space-y-4">
-              {/* ...form fields as before... */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                  <input {...registerEdit('firstName')} type="text" className={`input-field ${editErrors.firstName ? 'border-red-300' : ''}`} placeholder="Enter first name" />
+                  {editErrors.firstName && <p className="text-red-500 text-xs mt-1">{editErrors.firstName.message}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                  <input {...registerEdit('lastName')} type="text" className={`input-field ${editErrors.lastName ? 'border-red-300' : ''}`} placeholder="Enter last name" />
+                  {editErrors.lastName && <p className="text-red-500 text-xs mt-1">{editErrors.lastName.message}</p>}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input {...registerEdit('email')} type="email" className={`input-field ${editErrors.email ? 'border-red-300' : ''}`} placeholder="Enter email address" />
+                  {editErrors.email && <p className="text-red-500 text-xs mt-1">{editErrors.email.message}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Employee Number</label>
+                  <input {...registerEdit('employeeNumber')} type="text" className={`input-field ${editErrors.employeeNumber ? 'border-red-300' : ''}`} placeholder="e.g., EMP-021" />
+                  {editErrors.employeeNumber && <p className="text-red-500 text-xs mt-1">{editErrors.employeeNumber.message}</p>}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
+                  <input {...registerEdit('position')} type="text" className={`input-field ${editErrors.position ? 'border-red-300' : ''}`} placeholder="Enter job position" />
+                  {editErrors.position && <p className="text-red-500 text-xs mt-1">{editErrors.position.message}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                  <select {...registerEdit('department')} className={`input-field ${editErrors.department ? 'border-red-300' : ''}`}> 
+                    <option value="">Select Department</option>
+                    {departments.map(dep => (
+                      <option key={dep} value={dep}>{formatDepartmentName(dep)}</option>
+                    ))}
+                  </select>
+                  {editErrors.department && <p className="text-red-500 text-xs mt-1">{editErrors.department.message}</p>}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Salary</label>
+                  <input {...registerEdit('salary')} type="number" min="0" step="1000" className={`input-field ${editErrors.salary ? 'border-red-300' : ''}`} placeholder="Enter annual salary" />
+                  {editErrors.salary && <p className="text-red-500 text-xs mt-1">{editErrors.salary.message}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Birth Date</label>
+                  <input {...registerEdit('birthDate')} type="date" className={`input-field ${editErrors.birthDate ? 'border-red-300' : ''}`} />
+                  {editErrors.birthDate && <p className="text-red-500 text-xs mt-1">{editErrors.birthDate.message}</p>}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Manager (Optional)</label>
+                <select {...registerEdit('managerId')} className="input-field">
+                  <option value="">Select a manager</option>
+                  {managersData?.employees?.map((manager: Employee) => (
+                    <option key={manager.id} value={manager.id}>
+                      {manager.firstName} {manager.lastName} - {manager.position}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"
