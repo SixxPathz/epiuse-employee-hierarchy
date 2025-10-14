@@ -250,7 +250,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
           {permissions.canCreateEmployees && (
-            <>
+            <div className="flex flex-row space-x-3">
               <button 
                 onClick={() => { setShowAddModal(true); setAddType('employee'); }}
                 className="btn-primary inline-flex items-center space-x-2"
@@ -267,7 +267,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                   <span>Add Manager</span>
                 </button>
               )}
-            </>
+            </div>
           )}
         </div>
       </div>
