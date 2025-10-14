@@ -67,12 +67,12 @@ export default function Layout({ children, user: initialUser }: LayoutProps) {
                       <img 
                         src="/logo.png" 
                         alt="EPI-USE Logo" 
-                        className="h-10 w-auto mr-1"
+                        className="h-14 w-auto mr-1"
                       />
                       <span className="text-2xl font-bold text-epi-navy">Nexus</span>
                     </div>
                     <div className="text-center">
-                      <h1 className="text-sm font-semibold text-epi-navy">EPI-USE Employee Portal</h1>
+                      <h1 className="text-sm font-semibold text-gray-600">EPI-USE Employee Portal</h1>
                     </div>
                   </div>
                 </div>
@@ -83,34 +83,32 @@ export default function Layout({ children, user: initialUser }: LayoutProps) {
                     ))}
                   </div>
                 </nav>
+                {/* Removed misplaced duplicate logo */}
+              </div> {/* Close sidebar h-0 flex-1 */}
+            </div> {/* Close flex flex-col w-64 */}
+          </div> {/* Close hidden lg:flex lg:flex-shrink-0 */}
+          <div className="flex flex-col w-0 flex-1 overflow-hidden">
+            {/* Page header - loading state */}
+            <div className="header">
+              <div className="flex-1">
+                <div className="animate-pulse h-6 bg-gray-200 rounded w-32"></div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Main content */}
-        <div className="flex flex-col w-0 flex-1 overflow-hidden">
-          {/* Page header - loading state */}
-          <div className="header">
-            <div className="flex-1">
-              <div className="animate-pulse h-6 bg-gray-200 rounded w-32"></div>
-            </div>
-            <div className="ml-4 flex items-center space-x-4">
-              <div className="animate-pulse flex items-center space-x-3">
-                <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
-                <div className="hidden md:block space-y-1">
-                  <div className="h-4 bg-gray-200 rounded w-24"></div>
-                  <div className="h-3 bg-gray-200 rounded w-16"></div>
+              <div className="ml-4 flex items-center space-x-4">
+                <div className="animate-pulse flex items-center space-x-3">
+                  <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
+                  <div className="hidden md:block space-y-1">
+                    <div className="h-4 bg-gray-200 rounded w-24"></div>
+                    <div className="h-3 bg-gray-200 rounded w-16"></div>
+                  </div>
                 </div>
+                <div className="animate-pulse h-8 bg-gray-200 rounded w-20"></div>
               </div>
-              <div className="animate-pulse h-8 bg-gray-200 rounded w-20"></div>
             </div>
+            {/* Main content area */}
+            <main className="main-content">
+              {children}
+            </main>
           </div>
-
-          {/* Main content area */}
-          <main className="main-content">
-            {children}
-          </main>
         </div>
       </div>
     );
@@ -224,7 +222,7 @@ export default function Layout({ children, user: initialUser }: LayoutProps) {
                     <img 
                       src="/logo.png" 
                       alt="EPI-USE Logo" 
-                      className="h-16 w-auto mr-1"
+                      className="h-14 w-auto mr-1"
                     />
                     <span className="text-2xl font-bold text-epi-navy">Nexus</span>
                   </div>
@@ -241,7 +239,7 @@ export default function Layout({ children, user: initialUser }: LayoutProps) {
                     <Link
                       key={item.name}
                       href={item.href}
-                      className={`nav-link ${isActive ? 'nav-link-active' : 'nav-link-inactive'}`}
+                      className={`group flex items-center px-2 py-2 text-base font-medium rounded-md ${isActive ? 'bg-gray-100 text-epi-navy' : 'text-gray-700 hover:bg-gray-50'}`}
                       onClick={() => setSidebarOpen(false)}
                     >
                       <item.icon className="mr-3 h-5 w-5" />
@@ -267,13 +265,13 @@ export default function Layout({ children, user: initialUser }: LayoutProps) {
                     <img 
                       src="/logo.png" 
                       alt="EPI-USE Logo" 
-                      className="h-10 w-auto mr-1"
+                      className="h-14 w-auto mr-1"
                     />
                     <span className="text-2xl font-bold text-epi-navy">Nexus</span>
                   </div>
                   {/* Portal name underneath */}
                   <div className="text-center">
-                    <h1 className="text-sm font-semibold text-epi-navy">EPI-USE Employee Portal</h1>
+                    <h1 className="text-sm font-semibold text-gray-600">EPI-USE Employee Portal</h1>
                   </div>
                 </div>
               </div>
@@ -284,7 +282,7 @@ export default function Layout({ children, user: initialUser }: LayoutProps) {
                     <Link
                       key={item.name}
                       href={item.href}
-                      className={`nav-link ${isActive ? 'nav-link-active' : 'nav-link-inactive'}`}
+                      className={`group flex items-center px-2 py-2 text-base font-medium rounded-md ${isActive ? 'bg-gray-100 text-epi-navy' : 'text-gray-700 hover:bg-gray-50'}`}
                     >
                       <item.icon className="mr-3 h-5 w-5" />
                       {item.name}
@@ -309,7 +307,7 @@ export default function Layout({ children, user: initialUser }: LayoutProps) {
             >
               <Bars3Icon className="h-6 w-6" />
             </button>
-            <h1 className="text-lg font-semibold text-epi-navy">EPI-USE Nexus</h1>
+            <h1 className="text-lg font-semibold text-gray-600">EPI-USE Nexus</h1>
             <div className="w-6" />
           </div>
         </div>
