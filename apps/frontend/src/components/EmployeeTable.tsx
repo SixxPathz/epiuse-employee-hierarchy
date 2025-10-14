@@ -425,15 +425,20 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Manager (Optional)</label>
-                <select {...register('managerId')} className="input-field">
-                  <option value="">Select a manager</option>
-                  {managersData?.employees?.map((manager: Employee) => (
-                    <option key={manager.id} value={manager.id}>
-                      {manager.firstName} {manager.lastName} - {manager.position}
-                    </option>
-                  ))}
-                </select>
+                {/* Manager selection only for ADMINs; auto-assign for MANAGER users */}
+                {user?.role === 'ADMIN' ? (
+                  <>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Manager (Optional)</label>
+                    <select {...register('managerId')} className="input-field">
+                      <option value="">Select a manager</option>
+                      {managersData?.employees?.map((manager: Employee) => (
+                        <option key={manager.id} value={manager.id}>
+                          {manager.firstName} {manager.lastName} - {manager.position}
+                        </option>
+                      ))}
+                    </select>
+                  </>
+                ) : null}
               </div>
               <div className="flex justify-end space-x-3 pt-4">
                 <button
