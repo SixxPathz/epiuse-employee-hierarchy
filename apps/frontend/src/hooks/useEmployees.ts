@@ -119,20 +119,20 @@ export const useEmployee = (id: string, options?: Partial<UseQueryOptions<Employ
 // Managers List Hook
 export const useManagers = (options?: Partial<UseQueryOptions<ManagersResponse>>) => {
   return useQuery({
-    queryKey: queryKeys.managers,
-    queryFn: async (): Promise<ManagersResponse> => {
-      const response = await api.get('/employees', {
-        params: {
-          managerOnly: true,
-          limit: 100
-        }
-      });
-      return response.data;
-    },
-    staleTime: 10 * 60 * 1000, // 10 minutes - managers change less frequently
-    gcTime: 15 * 60 * 1000,
-    ...options,
-  });
+          queryKey: queryKeys.managers,
+          queryFn: async (): Promise<ManagersResponse> => {
+            const response = await api.get('/api/employees', {
+              params: {
+                managerOnly: true,
+                limit: 100
+              }
+            });
+            return response.data;
+          },
+          staleTime: 10 * 60 * 1000, // 10 minutes - managers change less frequently
+          gcTime: 15 * 60 * 1000,
+          ...options,
+        });
 };
 
 // Organization Hierarchy Hook
