@@ -403,12 +403,16 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                  <select {...register('department')} className={`input-field ${errors.department ? 'border-red-300' : ''}`}> 
-                    <option value="">Select Department</option>
-                    {departments.map(dep => (
-                      <option key={dep} value={dep}>{formatDepartmentName(dep)}</option>
-                    ))}
-                  </select>
+                  {addType === 'manager' ? (
+                    <input {...register('department')} type="text" className={`input-field ${errors.department ? 'border-red-300' : ''}`} placeholder="Enter new department" />
+                  ) : (
+                    <select {...register('department')} className={`input-field ${errors.department ? 'border-red-300' : ''}`}> 
+                      <option value="">Select Department</option>
+                      {departments.map(dep => (
+                        <option key={dep} value={dep}>{formatDepartmentName(dep)}</option>
+                      ))}
+                    </select>
+                  )}
                   {errors.department && <p className="text-red-500 text-xs mt-1">{errors.department.message}</p>}
                 </div>
               </div>
@@ -425,13 +429,13 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 </div>
               </div>
               <div>
-                {/* Manager selection only for ADMINs; auto-assign for MANAGER users */}
-                {user?.role === 'ADMIN' ? (
+                {/* Manager selection hidden in Add Employee modal; auto-assign based on department */}
+                {addType === 'employee' && user?.role === 'ADMIN' ? (
                   <>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Manager (Optional)</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Manager (Auto-selected by department)</label>
                     <select {...register('managerId')} className="input-field">
                       <option value="">Select a manager</option>
-                      {managersData?.employees?.map((manager: Employee) => (
+                      {managersData?.employees?.filter((manager: Employee) => manager.department === (getValues('department') || selectedDepartment)).map((manager: Employee) => (
                         <option key={manager.id} value={manager.id}>
                           {manager.firstName} {manager.lastName} - {manager.position}
                         </option>
