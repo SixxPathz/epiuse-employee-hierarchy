@@ -2,12 +2,28 @@ import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import rateLimit from 'express-rate-limit';
 import { body, validationResult } from 'express-validator';
 import { authMiddleware } from '../middleware/auth';
 import { prisma } from '../prismaClient';
 import { sendPasswordResetEmail } from '../utils/emailService';
 
 const router = Router();
+
+// Per-route rate limiters for sensitive endpoints
+const forgotPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const resetPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Login endpoint
 router.post('/login', [
@@ -62,19 +78,13 @@ router.post('/login', [
   }
 });
 
-// Get current user
-router.get('/me', async (req: Request, res: Response) => {
+// Get current user (protected)
+router.get('/me', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    
-    if (!token) {
-      return res.status(401).json({ error: 'No token provided' });
-    }
+    const currentUser = (req as any).user;
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-    
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+      where: { id: currentUser.userId },
       include: { employee: true }
     });
 
@@ -96,8 +106,9 @@ router.get('/me', async (req: Request, res: Response) => {
   }
 });
 
-// Change password endpoint
+// Change password (protected)
 router.post('/change-password', [
+  authMiddleware,
   body('currentPassword').exists(),
   body('newPassword').isLength({ min: 6 }),
 ], async (req: Request, res: Response) => {
@@ -108,16 +119,10 @@ router.post('/change-password', [
     }
 
     const { currentPassword, newPassword } = req.body;
-    const token = req.headers.authorization?.replace('Bearer ', '');
+    const currentUser = (req as any).user;
 
-    if (!token) {
-      return res.status(401).json({ error: 'No token provided' });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-    
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId }
+      where: { id: currentUser.userId }
     });
 
     if (!user) {
@@ -149,8 +154,8 @@ router.post('/change-password', [
   }
 });
 
-// Forgot password endpoint
-router.post('/forgot-password', [
+// Forgot password endpoint (rate limited)
+router.post('/forgot-password', forgotPasswordLimiter, [
   body('email').isEmail().normalizeEmail()
 ], async (req: Request, res: Response) => {
   try {
@@ -171,28 +176,31 @@ router.post('/forgot-password', [
       return res.json({ message: 'If the email exists, a reset link has been sent' });
     }
 
-    // Generate reset token
-    const resetToken = crypto.randomBytes(32).toString('hex');
+    // Generate reset token (store hashed, send raw)
+    const resetTokenRaw = crypto.randomBytes(32).toString('hex');
+    const resetTokenHash = crypto.createHash('sha256').update(resetTokenRaw).digest('hex');
     const resetTokenExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
-    // Save reset token to database
+    // Save hashed reset token to database
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        resetToken,
+        resetToken: resetTokenHash,
         resetTokenExpiry
       }
     });
 
-    // Send password reset email
-    const emailSent = await sendPasswordResetEmail(email, resetToken);
+    // Send password reset email with raw token
+    const emailSent = await sendPasswordResetEmail(email, resetTokenRaw);
     
     if (emailSent) {
       console.log(`✅ Password reset email sent to: ${email}`);
     } else {
       console.log(`❌ Failed to send email, but token generated for: ${email}`);
-      // Fallback: Log the reset link for development
-      console.log(`Reset link: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/reset-password?token=${resetToken}`);
+      // Fallback: Log the reset link for development only
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`Reset link: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/reset-password?token=${resetTokenRaw}`);
+      }
     }
 
     res.json({ message: 'If the email exists, a reset link has been sent' });
@@ -202,8 +210,8 @@ router.post('/forgot-password', [
   }
 });
 
-// Reset password endpoint
-router.post('/reset-password', [
+// Reset password endpoint (rate limited)
+router.post('/reset-password', resetPasswordLimiter, [
   body('token').exists(),
   body('newPassword').isLength({ min: 6 })
 ], async (req: Request, res: Response) => {
@@ -215,10 +223,11 @@ router.post('/reset-password', [
 
     const { token, newPassword } = req.body;
 
-    // Find user with valid reset token
+    // Find user with valid reset token (hash the incoming token to compare)
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
     const user = await prisma.user.findFirst({
       where: {
-        resetToken: token,
+        resetToken: tokenHash,
         resetTokenExpiry: {
           gt: new Date()
         }

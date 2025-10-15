@@ -31,10 +31,11 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
       return res.status(401).json({ error: 'User not found' });
     }
     
+    // Use database values, not token claims
     req.user = {
-      userId: decoded.userId,
-      email: decoded.email,
-      role: decoded.role,
+      userId: userWithEmployee.id,
+      email: userWithEmployee.email,
+      role: String(userWithEmployee.role),
       employee: userWithEmployee.employee
     };
 

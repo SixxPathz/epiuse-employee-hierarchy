@@ -3,10 +3,9 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { authMiddleware } from '../middleware/auth';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../prismaClient';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -108,7 +107,8 @@ router.get('/profile-picture/:filename', (req: Request, res: Response) => {
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
     res.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
     
-    const filename = req.params.filename;
+    // Sanitize filename to prevent path traversal
+    const filename = path.basename(req.params.filename);
     const filepath = path.join(__dirname, '../../uploads/profiles', filename);
     
     // Check if file exists

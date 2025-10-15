@@ -102,13 +102,15 @@ export const sendPasswordResetEmail = async (email: string, resetToken: string) 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     console.error('❌ Failed to send password reset email:', errorMessage);
     
-    // Fallback: Log the reset link for development/testing
-    console.log('\n📧 EMAIL FALLBACK - Copy this reset link:');
-    console.log('='.repeat(60));
-    console.log(`🔗 Reset link for ${email}:`);
-    console.log(resetUrl);
-    console.log('='.repeat(60));
-    console.log('💡 Paste this link in your browser to reset password\n');
+    // Fallback: Log the reset link for development/testing only
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('\n📧 EMAIL FALLBACK - Copy this reset link:');
+      console.log('='.repeat(60));
+      console.log(`🔗 Reset link for ${email}:`);
+      console.log(resetUrl);
+      console.log('='.repeat(60));
+      console.log('💡 Paste this link in your browser to reset password\n');
+    }
     
     return false; // Still return false so we know email failed
   }
