@@ -10,10 +10,6 @@ interface VirtualEmployeeTableProps {
   user?: User;
   onEdit: (employee: Employee) => void;
   onDelete: (employeeId: string) => void;
-  height?: number;
-  hasMore?: boolean;
-  isLoadingMore?: boolean;
-  loadMore?: () => void;
 }
 
 import type { UserPermissions } from '../utils/permissions';
@@ -140,10 +136,6 @@ export const VirtualEmployeeTable: React.FC<VirtualEmployeeTableProps> = ({
   user,
   onEdit,
   onDelete,
-  height = 600,
-  hasMore,
-  isLoadingMore,
-  loadMore,
 }) => {
   const permissions = getUserPermissions(user?.role || 'EMPLOYEE');
 
@@ -191,9 +183,6 @@ export const VirtualEmployeeTable: React.FC<VirtualEmployeeTableProps> = ({
     );
   }
 
-  // Simple virtual scrolling: render what we have; parent handles fetching more
-  const visibleEmployees = employees;
-
   return (
     <div className="card">
       {/* Table Header */}
@@ -211,19 +200,9 @@ export const VirtualEmployeeTable: React.FC<VirtualEmployeeTableProps> = ({
         </div>
       </div>
 
-      {/* Scrollable Content */}
-      <div 
-        style={{ height: height, overflow: 'auto' }}
-        className="divide-y divide-gray-200"
-        onScroll={(e) => {
-          const el = e.currentTarget as HTMLDivElement;
-          const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 200;
-          if (nearBottom && hasMore && !isLoadingMore) {
-            loadMore && loadMore();
-          }
-        }}
-      >
-        {visibleEmployees.map((employee, index) => (
+      {/* Table Content */}
+      <div>
+        {employees.map((employee, index) => (
           <EmployeeRow
             key={employee.id}
             employee={employee}
@@ -236,12 +215,6 @@ export const VirtualEmployeeTable: React.FC<VirtualEmployeeTableProps> = ({
             index={index}
           />
         ))}
-        
-        {hasMore && (
-          <div className="px-6 py-4 text-center text-gray-500">
-            <div className="text-sm">{isLoadingMore ? 'Loading more…' : 'Scroll to load more'}</div>
-          </div>
-        )}
       </div>
     </div>
   );

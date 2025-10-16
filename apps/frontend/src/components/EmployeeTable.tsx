@@ -14,7 +14,7 @@ import { getUserPermissions } from '../utils/permissions';
 import { TableSkeleton, SearchSkeleton } from './Skeletons';
 import { VirtualEmployeeTable } from './VirtualEmployeeTable';
 import {
-  useInfiniteEmployees,
+  useEmployees,
   useManagers,
   useAddEmployee,
   useUpdateEmployee,
@@ -48,16 +48,18 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [searchParams, setSearchParams] = useState({});
 
+
+  // Pagination state
+  const [page, setPage] = useState(1);
+
   // Data hooks
   const {
-    data: employeesPages,
+    data: employeesData,
     isLoading,
     error,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteEmployees({
-    limit: 50,
+  } = useEmployees({
+    page,
+    limit: 20,
     ...searchParams,
     sortBy,
     sortOrder,
@@ -65,8 +67,9 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
 
   const { data: managersData, isLoading: managersLoading } = useManagers();
 
+
   // Employees and managers
-  const allEmployees: Employee[] = (employeesPages?.pages || []).flatMap((p: { employees: Employee[] }) => p.employees || []);
+  const allEmployees: Employee[] = employeesData?.employees || [];
   const filteredEmployees: Employee[] = allEmployees.filter((employee: Employee) => {
     if (user?.role === 'MANAGER' && user?.employee?.id === employee.id) {
       return false;
@@ -216,7 +219,9 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
     );
   }
 
+
   const employees = filteredEmployees;
+  const pagination = employeesData?.pagination;
 
   return (
     <div className="space-y-6">
@@ -307,6 +312,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
         </div>
       </div>
 
+
       {/* Employee Table */}
       <VirtualEmployeeTable
         employees={employees}
@@ -325,13 +331,30 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
             });
           }
         }}
-        height={600}
-        hasMore={!!hasNextPage}
-        isLoadingMore={!!isFetchingNextPage}
-        loadMore={() => {
-          if (hasNextPage && !isFetchingNextPage) fetchNextPage();
-        }}
       />
+
+      {/* Pagination Controls */}
+      {pagination && (
+        <div className="flex justify-center items-center space-x-4 mt-4">
+          <button
+            className="btn-outline"
+            disabled={page <= 1}
+            onClick={() => setPage(page - 1)}
+          >
+            Previous
+          </button>
+          <span>
+            Page {pagination.currentPage} of {pagination.totalPages}
+          </span>
+          <button
+            className="btn-outline"
+            disabled={!pagination.hasNextPage}
+            onClick={() => setPage(page + 1)}
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       {/* Add/Edit Modals (simplified, can be expanded) */}
       {showAddModal && (
