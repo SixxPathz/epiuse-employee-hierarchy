@@ -1,3 +1,7 @@
+
+<div align="center">
+  <img src="apps/frontend/public/logo.png" alt="EPI-USE Logo" width="120"/>
+</div>
 # EPI-USE Employee Hierarchy Platform – User Guide
 
 ## Accessing the App
@@ -81,14 +85,12 @@
 ## Settings (Admins)
 
 - Company info
-- Example:  
-  ![Settings](apps/frontend/public/demo/settings.png)
 
 ---
 
 ## Logout
 
-- Click "Sign out" in the sidebar to log out.
+- Click "Sign out" log out.
 
 ---
 

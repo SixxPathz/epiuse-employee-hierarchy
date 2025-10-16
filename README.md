@@ -1,3 +1,7 @@
+
+<div align="center">
+      <img src="apps/frontend/public/logo.png" alt="EPI-USE Logo" width="120"/>
+</div>
 # EPI-USE Employee Hierarchy Platform
 
 ## Overview
