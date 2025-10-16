@@ -37,7 +37,7 @@ export function getUserPermissions(role: 'ADMIN' | 'MANAGER' | 'EMPLOYEE'): User
         canViewEmployees: true,
         canCreateEmployees: true,
         canEditEmployees: true,
-        canDeleteEmployees: false,
+        canDeleteEmployees: true, // Managers can now delete employees in their department
         canViewManagers: true,
         canAssignManagers: false,
         canViewSalaries: true,

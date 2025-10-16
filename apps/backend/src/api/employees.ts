@@ -924,6 +924,25 @@ router.delete('/:id', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Employee not found' });
     }
 
+
+    // Authorization: Only allow managers to delete employees in their department or under their management
+    if (currentUser.role === 'MANAGER') {
+      // Get manager's employee record
+      const manager = await prisma.user.findUnique({
+        where: { id: currentUser.userId },
+        include: { employee: { include: { subordinates: true } } }
+      });
+      if (!manager?.employee) {
+        return res.status(403).json({ error: 'Manager record not found' });
+      }
+      // Only allow deletion of direct subordinates or employees in the same department
+      const subordinateIds = manager.employee.subordinates.map(s => s.id);
+      const sameDepartment = manager.employee.department === currentEmployee.department;
+      if (!subordinateIds.includes(currentEmployee.id) && !sameDepartment) {
+        return res.status(403).json({ error: 'Managers can only delete employees in their department or under their management.' });
+      }
+    }
+
     // Prevent deletion of managers with employees assigned
     if (currentEmployee.subordinates.length > 0) {
       return res.status(400).json({ 

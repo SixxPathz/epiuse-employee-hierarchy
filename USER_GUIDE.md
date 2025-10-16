@@ -95,5 +95,5 @@
 ## Role-Based Features
 
 - **Admin:** Full access to all features, including employee CRUD, data export, and settings.
-- **Manager:** Can view and manage direct reports, see department stats, and update their own profile.
+- **Manager:** Can view and manage direct reports, see department stats, and update employee profiles.
 - **Employee:** Can view their own profile, see the org chart, and connect with team members.
