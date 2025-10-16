@@ -218,7 +218,7 @@ export default function Layout({ children, user: initialUser }: LayoutProps) {
               <div className="flex-shrink-0 flex items-center px-4 mb-6">
                 <div className="flex flex-col items-center space-y-2">
                   {/* Logo and Nexus side by side to spell EPI-USE Nexus */}
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center space-x-0.5">
                     <img 
                       src="/logo.png" 
                       alt="EPI-USE Logo" 

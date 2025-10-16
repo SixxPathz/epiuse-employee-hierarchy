@@ -97,7 +97,7 @@ export default function SettingsPage() {
         <div className="space-y-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">System Settings</h1>
-            <p className="text-gray-600">Configure your organization's system preferences.</p>
+            {/* Removed: Configure your organization's system preferences. */}
           </div>
 
           {/* Tab Navigation */}
@@ -145,9 +145,7 @@ export default function SettingsPage() {
                           <p><strong>Timezone:</strong> Africa/Johannesburg (SAST)</p>
                           <p><strong>Language:</strong> English (South Africa)</p>
                         </div>
-                        <p className="text-xs text-blue-600 mt-2">
-                          Company details are managed by system administrators and cannot be modified.
-                        </p>
+                        {/* Removed: Company details are managed by system administrators and cannot be modified. */}
                       </div>
                     </div>
                   </div>
