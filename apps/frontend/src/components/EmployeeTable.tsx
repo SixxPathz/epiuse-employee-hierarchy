@@ -12,7 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { getUserPermissions } from '../utils/permissions';
 import { TableSkeleton, SearchSkeleton } from './Skeletons';
-// Removed VirtualEmployeeTable import
+import { VirtualEmployeeTable } from './VirtualEmployeeTable';
 import {
   useInfiniteEmployees,
   useManagers,
@@ -307,90 +307,31 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
         </div>
       </div>
 
-      {/* Employee Table with Pagination */}
-      <div className="card">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Employee</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Position</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Department</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Salary</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Manager</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Joined</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={7} className="text-center py-8">Loading...</td>
-                </tr>
-              ) : filteredEmployees.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="text-center py-8">No employees found</td>
-                </tr>
-              ) : (
-                filteredEmployees.map(emp => (
-                  <tr key={emp.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">{emp.firstName} {emp.lastName}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{emp.position}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{emp.department}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{emp.salary}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{emp.manager?.firstName} {emp.manager?.lastName}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{emp.createdAt}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      {permissions.canEditEmployees && (
-                        <button className="mr-2 text-company-navy hover:text-company-navy-dark" onClick={() => {
-                          prefetchEmployee(emp.id);
-                          setEditingEmployee(emp);
-                          setShowEditModal(true);
-                        }}>
-                          <PencilIcon className="h-5 w-5" />
-                        </button>
-                      )}
-                      {permissions.canDeleteEmployees && (
-                        <button className="text-red-600 hover:text-red-900" onClick={() => {
-                          if (window.confirm('Are you sure you want to delete this employee?')) {
-                            deleteEmployeeMutation.mutateAsync(emp.id).then(() => {
-                              toast.success('Employee deleted successfully!');
-                            }).catch(err => {
-                              toast.error('Failed to delete employee');
-                            });
-                          }
-                        }}>
-                          <TrashIcon className="h-5 w-5" />
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-        {/* Pagination Controls */}
-        <div className="flex justify-between items-center py-4">
-          <button
-            className="btn-secondary"
-            disabled={page === 1}
-            onClick={() => setPage(page - 1)}
-          >
-            Previous
-          </button>
-          <span>
-            Page {page} of {Math.ceil(filteredEmployees.length / 20) || 1}
-          </span>
-          <button
-            className="btn-secondary"
-            disabled={page * 20 >= filteredEmployees.length}
-            onClick={() => setPage(page + 1)}
-          >
-            Next
-          </button>
-        </div>
-      </div>
+      {/* Employee Table */}
+      <VirtualEmployeeTable
+        employees={employees}
+        user={user}
+        onEdit={emp => {
+          prefetchEmployee(emp.id);
+          setEditingEmployee(emp);
+          setShowEditModal(true);
+        }}
+        onDelete={empId => {
+          if (window.confirm('Are you sure you want to delete this employee?')) {
+            deleteEmployeeMutation.mutateAsync(empId).then(() => {
+              toast.success('Employee deleted successfully!');
+            }).catch(err => {
+              toast.error('Failed to delete employee');
+            });
+          }
+        }}
+        height={600}
+        hasMore={!!hasNextPage}
+        isLoadingMore={!!isFetchingNextPage}
+        loadMore={() => {
+          if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+        }}
+      />
 
       {/* Add/Edit Modals (simplified, can be expanded) */}
       {showAddModal && (
