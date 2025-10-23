@@ -41,6 +41,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
   const [searchEmployeeNumber, setSearchEmployeeNumber] = useState('');
   // Removed searchPosition state (search by position is deprecated)
   const [selectedDepartment, setSelectedDepartment] = useState('');
+  const [selectedDepartmentForAdd, setSelectedDepartmentForAdd] = useState(''); // Track department in add form
   const [sortBy, setSortBy] = useState('firstName');
   const [sortOrder, setSortOrder] = useState('asc');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -96,11 +97,14 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
   const availableDepartmentsForManager = departments.filter(dep => !departmentsWithManagers.has(dep));
   const isDuplicateDepartment = customDepartment && departments.includes(normalizeDept(customDepartment));
 
-  // Managers in selected department
+  // Managers in selected department for add form
   const managersInSelectedDepartment = (managersData?.employees || []).filter(
-    (mgr: Employee) => normalizeDept(mgr.department) === normalizeDept(showCustomDepartment ? customDepartment : (addType === 'manager' ? '' : (selectedDepartment || '')))
+    (mgr: Employee) => normalizeDept(mgr.department) === normalizeDept(selectedDepartmentForAdd || '')
   );
   const noManagersExist = (managersData?.employees || []).length === 0;
+  
+  // CEO from all managers
+  const ceoEmployee = (managersData?.employees || []).find(isCEO);
 
   // Get user permissions
   const permissions = getUserPermissions(user?.role || 'EMPLOYEE');
@@ -383,6 +387,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
               <button
                 onClick={() => {
                   setShowAddModal(false);
+                  setSelectedDepartmentForAdd('');
                   reset({
                     department: user?.role === 'MANAGER' ? user.employee?.department : '',
                     managerId: user?.role === 'MANAGER' ? user.employee?.id : '',
@@ -473,7 +478,9 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                  {addType === 'manager' ? (
+                  {addType === 'manager' && user?.role === 'MANAGER' ? (
+                    <input type="text" className="input-field bg-gray-100" value={formatDepartmentName(normalizeDept(user.employee?.department || ''))} disabled {...register('department')} />
+                  ) : addType === 'manager' && user?.role === 'ADMIN' ? (
                     <>
                       <input {...register('department', {
                         setValueAs: v => normalizeDept(v)
@@ -486,8 +493,11 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                     <input type="text" className="input-field bg-gray-100" value={formatDepartmentName(normalizeDept(user.employee?.department || ''))} disabled {...register('department')} />
                   ) : (
                     <select {...register('department', {
-                      setValueAs: v => normalizeDept(v)
-                    })} className={`input-field ${errors.department ? 'border-red-300' : ''}`}> 
+                      setValueAs: v => normalizeDept(v),
+                      onChange: (e) => {
+                        setSelectedDepartmentForAdd(e.target.value);
+                      }
+                    })} className={`input-field ${errors.department ? 'border-red-300' : ''}`} onChange={(e) => setSelectedDepartmentForAdd(e.target.value)}> 
                       <option value="">Select Department</option>
                       {departments.map(dep => (
                         <option key={dep} value={dep}>{formatDepartmentName(dep)}</option>
@@ -500,7 +510,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Salary</label>
-                  <input {...register('salary')} type="number" min="0" step="1000" className={`input-field ${errors.salary ? 'border-red-300' : ''}`} placeholder="Enter annual salary" />
+                  <input {...register('salary')} type="number" min="0" step="1" className={`input-field ${errors.salary ? 'border-red-300' : ''}`} placeholder="Enter annual salary" />
                   {errors.salary && <p className="text-red-500 text-xs mt-1">{errors.salary.message}</p>}
                 </div>
                 <div>
@@ -510,22 +520,54 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 </div>
               </div>
               
+              {/* Manager selection for adding employees as admin */}
+              {addType === 'employee' && user?.role === 'ADMIN' && selectedDepartmentForAdd && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Assign to Manager
+                  </label>
+                  {managersInSelectedDepartment.length > 0 ? (
+                    <select {...register('managerId')} className="input-field">
+                      <option value="">Select a manager in {formatDepartmentName(selectedDepartmentForAdd)}</option>
+                      {managersInSelectedDepartment.map((manager: Employee) => (
+                        <option key={manager.id} value={manager.id}>
+                          {manager.firstName} {manager.lastName} - {manager.position}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                      <p className="text-sm text-yellow-800">
+                        No managers found in {formatDepartmentName(selectedDepartmentForAdd)}. Please add a manager to this department first.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+              
               {/* Manager selection for new managers (optional for admins, auto-assigned for managers) */}
               {addType === 'manager' && user?.role === 'ADMIN' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Reports To (Optional)
+                    Reports To
                   </label>
                   <select {...register('managerId')} className="input-field">
-                    <option value="">No Manager (Top Level)</option>
-                    {managersData?.employees?.map((manager: Employee) => (
+                    <option value="">{ceoEmployee ? 'Select who this manager reports to' : 'No Manager (Top Level)'}</option>
+                    {ceoEmployee && (
+                      <option key={ceoEmployee.id} value={ceoEmployee.id}>
+                        {ceoEmployee.firstName} {ceoEmployee.lastName} - {ceoEmployee.position} (CEO)
+                      </option>
+                    )}
+                    {managersData?.employees?.filter((m: Employee) => !isCEO(m)).map((manager: Employee) => (
                       <option key={manager.id} value={manager.id}>
                         {manager.firstName} {manager.lastName} - {manager.position}
                       </option>
                     ))}
                   </select>
                   <p className="text-xs text-gray-500 mt-1">
-                    Select who this manager will report to, or leave empty for a department head
+                    {ceoEmployee 
+                      ? 'Select CEO for department head, or another manager for a sub-manager role'
+                      : 'Leave empty to create the first top-level manager (CEO)'}
                   </p>
                 </div>
               )}
@@ -542,6 +584,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                   type="button"
                   onClick={() => {
                     setShowAddModal(false);
+                    setSelectedDepartmentForAdd('');
                     reset();
                   }}
                   className="btn-outline"
@@ -632,7 +675,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Salary</label>
-                  <input {...registerEdit('salary')} type="number" min="0" step="1000" className={`input-field ${editErrors.salary ? 'border-red-300' : ''}`} placeholder="Enter annual salary" />
+                  <input {...registerEdit('salary')} type="number" min="0" step="1" className={`input-field ${editErrors.salary ? 'border-red-300' : ''}`} placeholder="Enter annual salary" />
                   {editErrors.salary && <p className="text-red-500 text-xs mt-1">{editErrors.salary.message}</p>}
                 </div>
                 <div>

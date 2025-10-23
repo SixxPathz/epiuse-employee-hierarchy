@@ -1,15 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   UsersIcon,
   BanknotesIcon,
   ChartBarIcon,
   UserGroupIcon,
+  BuildingOfficeIcon,
 } from '@heroicons/react/24/outline';
 import api from '../utils/api';
 import { formatCurrency } from '../utils/helpers';
 import { getUserPermissions } from '../utils/permissions';
-import { User } from '../types';
+import { User, Employee } from '../types';
 
 interface DashboardStatsProps {
   user?: User;
@@ -66,8 +67,25 @@ export default function DashboardStats({ user }: DashboardStatsProps) {
     } },
   ];
 
+  // Calculate all reports (direct + indirect) for manager
+  const calculateIndirectReports = (employee: any): Employee[] => {
+    if (!employee?.subordinates || employee.subordinates.length === 0) return [];
+    
+    let allIndirect: Employee[] = [];
+    employee.subordinates.forEach((sub: any) => {
+      if (sub.subordinates && sub.subordinates.length > 0) {
+        allIndirect.push(...sub.subordinates);
+        allIndirect.push(...calculateIndirectReports(sub));
+      }
+    });
+    
+    return allIndirect;
+  };
+  
   // Get direct reports for manager
   const directReports = user?.role === 'MANAGER' && fullEmployee?.subordinates ? fullEmployee.subordinates : [];
+  const indirectReports = user?.role === 'MANAGER' && fullEmployee ? calculateIndirectReports(fullEmployee) : [];
+  const totalTeamSize = directReports.length + indirectReports.length;
 
   // Personal info for employee
   const personalInfo = user?.role === 'EMPLOYEE' && fullEmployee ? [
@@ -121,13 +139,12 @@ export default function DashboardStats({ user }: DashboardStatsProps) {
     } else if (user?.role === 'MANAGER') {
       // Manager sees team-focused stats
       return [
-        ...baseStats,
         {
           name: 'My Department',
           value: user.employee?.department 
             ? formatDepartmentName(user.employee.department)
             : 'N/A',
-          icon: UserGroupIcon,
+          icon: BuildingOfficeIcon,
           color: 'text-company-navy',
           bgColor: 'bg-gray-50',
         },
@@ -139,10 +156,17 @@ export default function DashboardStats({ user }: DashboardStatsProps) {
           bgColor: 'bg-gray-50',
         },
         {
-          name: 'Total Managers',
-          value: insights?.managementRatio?.totalManagers || 0,
-          icon: ChartBarIcon,
+          name: 'Indirect Reports',
+          value: indirectReports.length,
+          icon: UserGroupIcon,
           color: 'text-company-red',
+          bgColor: 'bg-gray-50',
+        },
+        {
+          name: 'Total Team Size',
+          value: totalTeamSize,
+          icon: ChartBarIcon,
+          color: 'text-company-navy',
           bgColor: 'bg-gray-50',
         },
       ];
@@ -243,25 +267,55 @@ export default function DashboardStats({ user }: DashboardStatsProps) {
         </div>
       )}
 
-      {/* Direct Reports for Manager */}
+      {/* Team Overview for Manager */}
       {user?.role === 'MANAGER' && (
-        <div className="card">
-          <div className="card-header">
-            <h3 className="text-lg font-semibold text-gray-900">Direct Reports</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="card">
+            <div className="card-header">
+              <h3 className="text-lg font-semibold text-gray-900">Direct Reports ({directReports.length})</h3>
+            </div>
+            <div className="card-body max-h-64 overflow-y-auto">
+              {directReports.length > 0 ? (
+                <ul className="space-y-2">
+                  {directReports.map((emp: any) => (
+                    <li key={emp.id} className="flex items-center justify-between py-1">
+                      <span className="text-sm font-medium">{emp.firstName} {emp.lastName}</span>
+                      <span className="text-xs text-gray-500">{emp.position}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-gray-500 text-sm">No direct reports</div>
+              )}
+            </div>
           </div>
-          <div className="card-body">
-            {directReports.length > 0 ? (
-              <ul className="space-y-2">
-                {directReports.map((emp: any) => (
-                  <li key={emp.id} className="flex items-center justify-between">
-                    <span>{emp.firstName} {emp.lastName}</span>
-                    <span className="text-xs text-gray-500">{emp.position}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="text-gray-500">No direct reports</div>
-            )}
+          
+          <div className="card">
+            <div className="card-header">
+              <h3 className="text-lg font-semibold text-gray-900">Team Summary</h3>
+            </div>
+            <div className="card-body">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Direct Reports</span>
+                  <span className="text-lg font-semibold text-company-navy">{directReports.length}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Indirect Reports</span>
+                  <span className="text-lg font-semibold text-company-navy">{indirectReports.length}</span>
+                </div>
+                <div className="border-t pt-2 flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Total Team Size</span>
+                  <span className="text-xl font-bold text-company-red">{totalTeamSize}</span>
+                </div>
+                {permissions.canViewSalaries && fullEmployee?.salary && (
+                  <div className="border-t pt-2 flex items-center justify-between">
+                    <span className="text-sm text-gray-600">My Salary</span>
+                    <span className="text-sm font-semibold text-gray-900">{formatCurrency(fullEmployee.salary)}</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
