@@ -396,6 +396,7 @@ router.get('/:id', async (req: Request, res: Response) => {
             lastName: true,
             position: true,
             email: true,
+            salary: true,
             subordinates: {
               select: {
                 id: true,
@@ -403,6 +404,7 @@ router.get('/:id', async (req: Request, res: Response) => {
                 lastName: true,
                 position: true,
                 email: true,
+                salary: true,
                 subordinates: {
                   select: {
                     id: true,
@@ -410,13 +412,15 @@ router.get('/:id', async (req: Request, res: Response) => {
                     lastName: true,
                     position: true,
                     email: true,
+                    salary: true,
                     subordinates: {
                       select: {
                         id: true,
                         firstName: true,
                         lastName: true,
                         position: true,
-                        email: true
+                        email: true,
+                        salary: true
                       }
                     }
                   }
@@ -1032,11 +1036,11 @@ router.get('/stats/dashboard', async (req: Request, res: Response) => {
     const salaries = canViewSalaries ? employees.map(e => e.salary).filter(Boolean) : [];
     const averageSalary = salaries.length > 0 ? salaries.reduce((a, b) => a + b, 0) / salaries.length : 0;
 
-    // Count managers by User role (MANAGER or ADMIN)
+    // Count managers by User role (MANAGER only - exclude ADMIN)
     const userRoleMap = new Map(users.map(u => [u.email, u.role]));
     const managerCount = employees.filter(emp => {
       const userRole = userRoleMap.get(emp.email);
-      return userRole === 'MANAGER' || userRole === 'ADMIN';
+      return userRole === 'MANAGER'; // Only count actual managers, not admins
     }).length;
 
     const managementRatio = totalEmployees > 0 ? (managerCount / totalEmployees) * 100 : 0;

@@ -320,6 +320,7 @@ export default function DashboardStats({ user }: DashboardStatsProps) {
         </div>
       )}
 
+
       {/* Personal Info for Employee */}
       {user?.role === 'EMPLOYEE' && (
         <div className="card">
