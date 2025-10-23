@@ -480,11 +480,8 @@ router.post('/', [
     if (currentUser.role === 'EMPLOYEE') {
       return res.status(403).json({ error: 'Employees cannot create new employee records' });
     }
-    // Only admins can add managers or create new departments
-    if ((position.toLowerCase().includes('manager') || position.toLowerCase().includes('head of') || position.toLowerCase().includes('director')) && currentUser.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Only admins can add managers or create new departments' });
-    }
-    // Managers can only add employees to their own department
+    // Allow managers to create sub-managers under them (removed restriction)
+    // Managers can add employees and sub-managers to their own department
     if (currentUser.role === 'MANAGER' && department !== currentUser.employee?.department) {
       return res.status(403).json({ error: 'Managers can only add employees to their own department' });
     }
@@ -505,21 +502,8 @@ router.post('/', [
         // If adding a manager for a new department, allow managerId to be null or CEO to be missing
         // Only block if managerId is not null and not found
         // For first manager in a new department, managerId may be CEO or null
-        // If managerId is not found, allow creation if position is manager/head/director and department is new
-        const existingManager = await prisma.employee.findFirst({
-          where: {
-            department: department,
-            OR: [
-              { position: { contains: 'manager', mode: 'insensitive' } },
-              { position: { contains: 'head of', mode: 'insensitive' } },
-              { position: { contains: 'director', mode: 'insensitive' } }
-            ]
-          }
-        });
-        if (existingManager) {
-          return res.status(400).json({ error: `Department '${department}' already has a manager.` });
-        }
-        // Otherwise, allow creation (first manager for new department)
+        // Allow multiple managers in a department for hierarchical structure
+        // No longer restricting to one manager per department
       } else {
         // Prevent cycles: manager cannot be a subordinate of employee
         if (managerId === email) {
@@ -529,26 +513,12 @@ router.post('/', [
         // Get manager's department directly from the department field
         const managerDepartment = manager.department;
 
-        // Enforce unique manager per department
-        if (manager.position.toLowerCase().includes('manager') || manager.position.toLowerCase().includes('head of') || manager.position.toLowerCase().includes('director')) {
-          const existingManager = await prisma.employee.findFirst({
-            where: {
-              department: department,
-              OR: [
-                { position: { contains: 'manager', mode: 'insensitive' } },
-                { position: { contains: 'head of', mode: 'insensitive' } },
-                { position: { contains: 'director', mode: 'insensitive' } }
-              ]
-            }
-          });
-          if (existingManager && existingManager.id !== managerId) {
-            return res.status(400).json({ error: `Department '${department}' already has a manager.` });
-          }
-        }
+        // Allow multiple managers in a department for hierarchical structure
+        // Removed unique manager per department restriction
 
         // Validate department-manager alignment
         if (currentUser.role === 'MANAGER') {
-          // Managers can only assign employees to themselves within their department
+          // Managers can assign employees and sub-managers to themselves within their department
           const currentManager = await prisma.user.findUnique({
             where: { id: currentUser.userId },
             include: { employee: true }
@@ -556,7 +526,7 @@ router.post('/', [
 
           if (currentManager?.employee?.id !== managerId) {
             return res.status(403).json({ 
-              error: 'Managers can only assign employees to themselves' 
+              error: 'Managers can only assign employees and sub-managers to themselves' 
             });
           }
           
@@ -709,22 +679,19 @@ router.put('/:id', [
     }
 
     if (currentUser.role === 'MANAGER') {
-      // Managers can only edit employees under them
+      // Managers can edit all employees under them recursively (direct and indirect reports)
       const currentManager = await prisma.user.findUnique({
         where: { id: currentUser.userId },
         include: {
-          employee: {
-            include: {
-              subordinates: { select: { id: true } }
-            }
-          }
+          employee: true
         }
       });
 
       if (currentManager?.employee) {
-        const subordinateIds = currentManager.employee.subordinates.map(s => s.id);
+        // Get all subordinates recursively
+        const allSubordinateIds = await getAllSubordinateIds(currentManager.employee.id);
         
-        if (!subordinateIds.includes(id) && currentManager.employee.id !== id) {
+        if (!allSubordinateIds.includes(id) && currentManager.employee.id !== id) {
           return res.status(403).json({ 
             error: 'Managers can only edit employees under their management or themselves' 
           });
@@ -784,23 +751,8 @@ router.put('/:id', [
         return res.status(400).json({ error: 'Manager not found' });
       }
 
-      // Enforce unique manager per department on department change for managers
-      if (manager.position.toLowerCase().includes('manager') || manager.position.toLowerCase().includes('head of') || manager.position.toLowerCase().includes('director')) {
-        const targetDepartment = updateData.department || manager.department;
-        const existingManager = await prisma.employee.findFirst({
-          where: {
-            department: targetDepartment,
-            OR: [
-              { position: { contains: 'manager', mode: 'insensitive' } },
-              { position: { contains: 'head of', mode: 'insensitive' } },
-              { position: { contains: 'director', mode: 'insensitive' } }
-            ]
-          }
-        });
-        if (existingManager && existingManager.id !== manager.id) {
-          return res.status(400).json({ error: `Department '${targetDepartment}' already has a manager.` });
-        }
-      }
+      // Allow multiple managers per department for hierarchical structure
+      // Removed unique manager per department restriction
     }
 
     // Auto-update managerId if department changes
@@ -1119,25 +1071,20 @@ router.get('/stats/dashboard', async (req: Request, res: Response) => {
   }
 });
 
-// Get organization hierarchy
+// Get organization hierarchy with unlimited depth
 router.get('/hierarchy/tree', async (req: Request, res: Response) => {
   try {
-    // Get all employees with their relationships
+    // Get all employees without nested includes (flat structure)
     const employees = await prisma.employee.findMany({
-      include: {
-        subordinates: {
-          include: {
-            subordinates: {
-              include: {
-                subordinates: {
-                  include: {
-                    subordinates: true
-                  }
-                }
-              }
-            }
-          }
-        }
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        position: true,
+        email: true,
+        salary: true,
+        employeeNumber: true,
+        managerId: true
       }
     });
 
@@ -1148,18 +1095,29 @@ router.get('/hierarchy/tree', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'No CEO found in organization' });
     }
 
-    // Build hierarchy tree recursively
-    const buildTree = (employee: any): any => ({
-      id: employee.id,
-      name: `${employee.firstName} ${employee.lastName}`,
-      position: employee.position,
-      email: employee.email,
-      salary: employee.salary,
-      employeeNumber: employee.employeeNumber,
-      children: employee.subordinates.map(buildTree)
-    });
+    // Create a map for fast lookup
+    const employeeMap = new Map(employees.map(emp => [emp.id, emp]));
 
-    const hierarchy = buildTree(ceo);
+    // Build hierarchy tree recursively with unlimited depth
+    const buildTree = (employeeId: string): any => {
+      const employee = employeeMap.get(employeeId);
+      if (!employee) return null;
+
+      // Find all direct subordinates
+      const subordinates = employees.filter(emp => emp.managerId === employeeId);
+
+      return {
+        id: employee.id,
+        name: `${employee.firstName} ${employee.lastName}`,
+        position: employee.position,
+        email: employee.email,
+        salary: employee.salary,
+        employeeNumber: employee.employeeNumber,
+        children: subordinates.map(sub => buildTree(sub.id)).filter(Boolean)
+      };
+    };
+
+    const hierarchy = buildTree(ceo.id);
 
     res.json({ hierarchy });
   } catch (error) {

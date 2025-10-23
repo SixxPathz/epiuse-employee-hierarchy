@@ -162,6 +162,23 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
       .replace(/\b\w/g, c => c.toUpperCase());
   };
 
+  // Effect to prepopulate edit form when editingEmployee changes
+  useEffect(() => {
+    if (editingEmployee && showEditModal) {
+      resetEdit({
+        firstName: editingEmployee.firstName,
+        lastName: editingEmployee.lastName,
+        email: editingEmployee.email,
+        employeeNumber: editingEmployee.employeeNumber,
+        position: editingEmployee.position,
+        department: editingEmployee.department,
+        salary: editingEmployee.salary,
+        birthDate: editingEmployee.birthDate ? new Date(editingEmployee.birthDate).toISOString().split('T')[0] : '',
+        managerId: editingEmployee.managerId || '',
+      });
+    }
+  }, [editingEmployee, showEditModal, resetEdit]);
+
   // Handle search button click
   const handleSearch = () => {
     setSearchParams({
@@ -249,14 +266,15 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 <PlusIcon className="h-5 w-5" />
                 <span>Add Employee</span>
               </button>
-              {user?.role === 'ADMIN' && (
+              {/* Both ADMINs and MANAGERs can now add managers/sub-managers */}
+              {(user?.role === 'ADMIN' || user?.role === 'MANAGER') && (
                 <button
                   onClick={() => { setShowAddModal(true); setAddType('manager'); }}
                   className="btn-secondary inline-flex items-center space-x-2"
                   disabled={isLoading || !permissions.canCreateEmployees}
                 >
                   <PlusIcon className="h-5 w-5" />
-                  <span>Add Manager</span>
+                  <span>{user?.role === 'ADMIN' ? 'Add Manager' : 'Add Sub-Manager'}</span>
                 </button>
               )}
             </div>
@@ -376,16 +394,25 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
               </button>
             </div>
             <form onSubmit={handleSubmit(data => {
-              // If adding a manager, set managerId to CEO if found, else null
               let payload = { ...data };
+              
+              // If adding a manager/sub-manager
               if (addType === 'manager') {
-                if (managersData?.employees) {
-                  const ceo = managersData.employees.find(isCEO);
-                  payload.managerId = ceo ? ceo.id : undefined;
-                } else {
-                  payload.managerId = undefined;
+                // If managerId is explicitly provided (from form), use it
+                // Otherwise, auto-assign based on user role
+                if (!payload.managerId) {
+                  if (user?.role === 'MANAGER' && user.employee?.id) {
+                    // Managers add sub-managers under themselves
+                    payload.managerId = user.employee.id;
+                    payload.department = user.employee.department;
+                  } else if (user?.role === 'ADMIN' && managersData?.employees) {
+                    // Admins can assign to CEO or leave undefined for new top-level managers
+                    const ceo = managersData.employees.find(isCEO);
+                    payload.managerId = ceo ? ceo.id : undefined;
+                  }
                 }
               }
+              
               // If adding an employee, auto-assign managerId
               if (addType === 'employee') {
                 let dept = normalizeDept(payload.department);
@@ -405,12 +432,13 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                   return;
                 }
               }
+              
               addEmployeeMutation.mutateAsync(payload).then(() => {
-                toast.success('Employee added successfully!');
+                toast.success(`${addType === 'manager' ? 'Manager' : 'Employee'} added successfully!`);
                 setShowAddModal(false);
                 reset();
               }).catch(err => {
-                toast.error(handleApiError(err, 'Failed to add employee'));
+                toast.error(handleApiError(err, `Failed to add ${addType}`));
               });
             })} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -481,9 +509,34 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                   {errors.birthDate && <p className="text-red-500 text-xs mt-1">{errors.birthDate.message}</p>}
                 </div>
               </div>
-              <div>
-                {/* Manager selection removed from Add Employee modal; auto-assign managerId based on department */}
-              </div>
+              
+              {/* Manager selection for new managers (optional for admins, auto-assigned for managers) */}
+              {addType === 'manager' && user?.role === 'ADMIN' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Reports To (Optional)
+                  </label>
+                  <select {...register('managerId')} className="input-field">
+                    <option value="">No Manager (Top Level)</option>
+                    {managersData?.employees?.map((manager: Employee) => (
+                      <option key={manager.id} value={manager.id}>
+                        {manager.firstName} {manager.lastName} - {manager.position}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Select who this manager will report to, or leave empty for a department head
+                  </p>
+                </div>
+              )}
+              {addType === 'manager' && user?.role === 'MANAGER' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                  <p className="text-sm text-blue-800">
+                    <strong>Note:</strong> This sub-manager will report to you and work in your department ({formatDepartmentName(user.employee?.department || '')}).
+                  </p>
+                </div>
+              )}
+              
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"
