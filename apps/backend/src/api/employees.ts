@@ -395,7 +395,34 @@ router.get('/:id', async (req: Request, res: Response) => {
             firstName: true,
             lastName: true,
             position: true,
-            email: true
+            email: true,
+            subordinates: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                position: true,
+                email: true,
+                subordinates: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    position: true,
+                    email: true,
+                    subordinates: {
+                      select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        position: true,
+                        email: true
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
