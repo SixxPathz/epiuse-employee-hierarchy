@@ -5,7 +5,7 @@ import { Employee } from '../types';
 // NOT the User's role. An employee with subordinates is functionally a manager.
 export function isManager(employee: Employee): boolean {
   // A manager is anyone who has subordinates reporting to them
-  return employee.subordinates && employee.subordinates.length > 0;
+  return Boolean(employee.subordinates && employee.subordinates.length > 0);
 }
 
 export function isCEO(employee: Employee): boolean {
