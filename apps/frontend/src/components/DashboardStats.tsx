@@ -300,20 +300,10 @@ export default function DashboardStats({ user }: DashboardStatsProps) {
                   <span className="text-sm text-gray-600">Direct Reports</span>
                   <span className="text-lg font-semibold text-company-navy">{directReports.length}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Indirect Reports</span>
-                  <span className="text-lg font-semibold text-company-navy">{indirectReports.length}</span>
-                </div>
                 <div className="border-t pt-2 flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-700">Total Team Size</span>
                   <span className="text-xl font-bold text-company-red">{totalTeamSize}</span>
                 </div>
-                {permissions.canViewSalaries && fullEmployee?.salary && (
-                  <div className="border-t pt-2 flex items-center justify-between">
-                    <span className="text-sm text-gray-600">My Salary</span>
-                    <span className="text-sm font-semibold text-gray-900">{formatCurrency(fullEmployee.salary)}</span>
-                  </div>
-                )}
               </div>
             </div>
           </div>

@@ -323,17 +323,21 @@ router.get('/', [
     ]);
 
     // PROFESSIONAL MANAGEMENT SYSTEM: Filter sensitive data based on role
+    // For MANAGERs we need the full set of recursively managed employee IDs to decide salary visibility
+    let managedIdsForCurrentManager: string[] = [];
+    if (currentUser.role === 'MANAGER' && currentUser.employee?.id) {
+      const allIds = await getAllSubordinateIds(currentUser.employee.id);
+      managedIdsForCurrentManager = [currentUser.employee.id, ...allIds];
+    }
+
     const filteredEmployees = employees.map(employee => {
       if (currentUser.role === 'ADMIN') {
         // Admins can see all fields
         return employee;
       } else if (currentUser.role === 'MANAGER') {
-        // Managers can see birth dates and salaries only for subordinates + themselves
-        const currentUserEmployee = currentUser.employee;
-        const isSubordinate = employee.managerId === currentUserEmployee?.id;
-        const isSelf = employee.id === currentUserEmployee?.id;
-        
-        if (isSubordinate || isSelf) {
+        // Managers can see birth dates and salaries for ANY of their managed employees (direct or indirect) + themselves
+        const isManaged = managedIdsForCurrentManager.includes(employee.id);
+        if (isManaged) {
           return employee; // Show all fields
         } else {
           // Hide sensitive data for non-subordinates
