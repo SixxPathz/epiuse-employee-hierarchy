@@ -423,7 +423,10 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
               </button>
             </div>
             <form onSubmit={handleSubmit(data => {
-              let payload = { ...data };
+              let payload = { 
+                ...data,
+                isManager: addType === 'manager' // Explicitly set role based on button choice
+              };
               
               // If adding a manager/sub-manager
               if (addType === 'manager') {

@@ -455,6 +455,7 @@ router.post('/', [
   body('position').trim().isLength({ min: 1 }),
   body('managerId').optional().isString(),
   body('department').isString().trim().notEmpty(), // Allow any non-empty string
+  body('isManager').optional().isBoolean(), // Explicit role from Add Manager/Employee button
 ], async (req: Request, res: Response) => {
   try {
     const errors = validationResult(req);
@@ -462,7 +463,7 @@ router.post('/', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    let { firstName, lastName, email, birthDate, employeeNumber, salary, position, managerId, department } = req.body;
+    let { firstName, lastName, email, birthDate, employeeNumber, salary, position, managerId, department, isManager } = req.body;
     // Normalize department name and employee number
     department = typeof department === 'string' ? department.trim().toLowerCase().replace(/\s+/g, '-') : department;
     employeeNumber = typeof employeeNumber === 'string' ? employeeNumber.trim().toUpperCase() : employeeNumber;
@@ -582,13 +583,18 @@ router.post('/', [
 
     // Create user and employee in a transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Determine role based on position
+      // Determine role based on explicit button choice (Add Manager vs Add Employee)
       let role = 'EMPLOYEE';
-      if (position.toLowerCase().includes('ceo') || position.toLowerCase().includes('chief executive')) {
+      
+      // CEO detection: no manager assigned = ADMIN role (top of hierarchy)
+      if (!managerId) {
         role = 'ADMIN';
-      } else if (position.toLowerCase().includes('manager') || position.toLowerCase().includes('head of') || position.toLowerCase().includes('director')) {
+      } 
+      // Manager role: explicitly set via "Add Manager" button
+      else if (isManager === true) {
         role = 'MANAGER';
       }
+      // Otherwise: EMPLOYEE role (default)
 
       // Create user record first (required for foreign key relationship)
   const hashedPassword = await bcrypt.hash('securepassword123', 10); // Default password
@@ -974,36 +980,22 @@ router.get('/stats/dashboard', async (req: Request, res: Response) => {
     // No role-based filtering - everyone sees the same organizational overview
     
     // Get basic statistics for the entire organization
-    const [totalEmployees, employees] = await Promise.all([
+    const [totalEmployees, employees, users] = await Promise.all([
       prisma.employee.count(), // All employees
       prisma.employee.findMany({ 
         select: {
           id: true,
           position: true,
+          email: true, // Need email to match with User
           salary: true, // We'll filter this based on permissions below
           createdAt: true,
-          managerId: true,
-          manager: {
-            select: {
-              id: true,
-              position: true,
-              managerId: true,
-              manager: {
-                select: {
-                  id: true,
-                  position: true,
-                  managerId: true,
-                  manager: {
-                    select: {
-                      id: true,
-                      position: true,
-                      managerId: true
-                    }
-                  }
-                }
-              }
-            }
-          }
+          managerId: true
+        }
+      }),
+      prisma.user.findMany({ 
+        select: {
+          email: true,
+          role: true
         }
       })
     ]);
@@ -1013,14 +1005,12 @@ router.get('/stats/dashboard', async (req: Request, res: Response) => {
     const salaries = canViewSalaries ? employees.map(e => e.salary).filter(Boolean) : [];
     const averageSalary = salaries.length > 0 ? salaries.reduce((a, b) => a + b, 0) / salaries.length : 0;
 
-    // Count managers (those with "Head of" or "Chief" in their title, plus actual managers)
-    const managerCount = employees.filter(emp => 
-      emp.position.toLowerCase().includes('head of') || 
-      emp.position.toLowerCase().includes('chief') ||
-      emp.position.toLowerCase().includes('ceo') ||
-      emp.position.toLowerCase().includes('manager') ||
-      emp.position.toLowerCase().includes('director')
-    ).length;
+    // Count managers by User role (MANAGER or ADMIN)
+    const userRoleMap = new Map(users.map(u => [u.email, u.role]));
+    const managerCount = employees.filter(emp => {
+      const userRole = userRoleMap.get(emp.email);
+      return userRole === 'MANAGER' || userRole === 'ADMIN';
+    }).length;
 
     const managementRatio = totalEmployees > 0 ? (managerCount / totalEmployees) * 100 : 0;
 
