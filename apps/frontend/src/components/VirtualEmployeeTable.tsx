@@ -153,18 +153,9 @@ export const VirtualEmployeeTable: React.FC<VirtualEmployeeTableProps> = ({
     if (user?.role === 'ADMIN') return true;
     
     if (user?.role === 'MANAGER') {
-      // Managers can only view their own salary and subordinates' salaries
-      if (employee.id === user.employee?.id) return true; // Own salary
-      
-      // Check if this employee reports to the current manager (direct or indirect subordinate)
-      const isSubordinate = (emp: Employee, managerId: string): boolean => {
-        if (!emp.manager) return false;
-        if (emp.manager.id === managerId) return true;
-        // Type guard: emp.manager is Employee
-        return isSubordinate(emp.manager as Employee, managerId);
-      };
-      
-      return user.employee?.id ? isSubordinate(employee, user.employee.id) : false;
+      // Backend already filters salary data correctly for managers
+      // If the employee has a salary field, it means the backend determined we can see it
+      return employee.salary !== null && employee.salary !== undefined;
     }
     
     return false; // Employees can't see any salaries
