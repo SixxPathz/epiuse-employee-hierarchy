@@ -166,11 +166,182 @@ This document outlines all the fixes and improvements made to the EPI-USE Employ
 
 ---
 
+### 6. ✅ Improved Manager Deletion Handling
+**Issue:** Unclear what happens when trying to delete a manager with subordinates. Need better UI feedback and proper handling.
+
+**Solution:**
+- Added pre-deletion check in frontend to detect managers with subordinates
+- Shows warning toast with list of subordinates before attempting deletion
+- Prevents deletion attempt if subordinates exist
+- Enhanced error handling on backend response:
+  - Specific message for managers with subordinates
+  - Special handling for CEO deletion attempts
+  - Clear guidance on what needs to be done first
+- User-friendly confirmation dialogs with employee names
+
+**Files Changed:**
+- `apps/frontend/src/components/EmployeeTable.tsx` (lines 347-375)
+
+**Key Features:**
+- Proactive warning prevents unnecessary API calls
+- Lists all subordinates who need reassignment
+- Clear action items in error messages
+- CEO protection with specific messaging
+
+---
+
+### 7. ✅ Enhanced Error and Success Messages Throughout App
+**Issue:** Generic error messages like "Failed to update" don't help users understand what went wrong.
+
+**Solution:**
+Replaced all generic messages with descriptive, context-aware messages across the entire application:
+
+**EmployeeTable Component:**
+- ✅ Add employee success: "✅ [Name] has been added as a [Position] in the [Department] department."
+- ❌ Add employee errors: Specific messages for duplicate emails, validation errors, missing managers
+- ✅ Update employee success: "✅ [Name]'s information has been successfully updated."
+- ❌ Update employee errors: Specific messages for duplicates, not found, validation
+- ✅ Delete employee success: "[Name] has been successfully removed from the system."
+- ❌ Delete employee errors: Specific messages for managers with subordinates, CEO protection
+
+**Login Page:**
+- ✅ Success: "✅ Welcome back, [Name]!"
+- ❌ Errors: Specific messages for incorrect credentials, account not found, locked accounts
+
+**Profile Page:**
+- ✅ Profile update: "✅ Your profile has been successfully updated, [Name]!"
+- ❌ Profile errors: Specific messages for duplicate email, validation errors
+- ✅ Password change: "✅ Your password has been successfully changed. Please use your new password on next login."
+- ❌ Password errors: Specific messages for incorrect current password, weak password
+
+**DataExport Component:**
+- ✅ Success: "✅ [Format] successfully exported to [filename]. Check your downloads folder."
+- ❌ Errors: Descriptive error messages with guidance
+
+**ProfilePictureUpload Component:**
+- ✅ Upload success: "✅ Your profile picture has been updated successfully!"
+- ❌ Upload errors: Specific messages for file size (shows actual size), invalid format
+- ✅ Remove success: "✅ Your profile picture has been removed. Your Gravatar will be displayed instead."
+- Client-side validation with file size display: "⚠️ File too large: Your image is [X]MB. Please select an image smaller than 5MB."
+
+**Files Changed:**
+- `apps/frontend/src/components/EmployeeTable.tsx` (lines 347-478, 656-671)
+- `apps/frontend/src/pages/auth/login.tsx` (lines 42-61)
+- `apps/frontend/src/pages/profile.tsx` (lines 122-189)
+- `apps/frontend/src/components/DataExport.tsx` (lines 45-76)
+- `apps/frontend/src/components/ProfilePictureUpload.tsx` (lines 60-153)
+
+**Message Features:**
+- ✅ Checkmark for success, ❌ X for errors, ⚠️ Warning for validation
+- Personalized with user/employee names
+- Context-specific with relevant details
+- Actionable guidance on how to fix errors
+- Appropriate durations (3-6 seconds based on message length)
+- Error categorization for better handling
+
+---
+
+### 8. ✅ Fixed Admin Add Manager Department Logic
+**Issue:** When admin adds a new manager, department field should only be editable when CEO is selected as the manager they report to. For other managers, department should be prefilled and locked.
+
+**Solution:**
+- Added `selectedManagerIdForAdd` state to track which manager is selected
+- Department field behavior now depends on selected manager:
+  - **CEO selected:** Department field is editable (new department head)
+  - **Other manager selected:** Department auto-fills and locks to that manager's department
+  - **No manager selected:** Department field is editable (for first CEO)
+- Auto-fills department when manager is selected
+- Clears department when CEO is selected
+- Shows helpful context messages based on selection
+- Lists manager's department in the dropdown for clarity
+
+**Files Changed:**
+- `apps/frontend/src/components/EmployeeTable.tsx` (lines 45, 517-543, 607-644)
+
+**Key Features:**
+- Intelligent form behavior based on manager selection
+- Clear visual feedback (disabled fields, helpful messages)
+- Prevents incorrect department assignments
+- Department names shown in manager dropdown
+
+---
+
+### 9. ✅ Enhanced Form Validation
+**Issue:** Forms accepted invalid data like numbers in names, no age validation, unrealistic salaries.
+
+**Solution:**
+Comprehensively upgraded validation schema with strict rules:
+
+**Name Validation:**
+- Must be 2-50 characters
+- Only letters, spaces, hyphens, apostrophes allowed
+- Explicit test to reject numbers in names
+- Proper error messages for each rule
+
+**Email Validation:**
+- Standard email format validation
+- Auto-trims and lowercases
+
+**Employee Number:**
+- Must match EMP-XXX format (3-5 digits)
+- Auto-converts to uppercase
+- Clear format example in error message
+
+**Position:**
+- 2-100 characters
+- Auto-trims whitespace
+
+**Salary:**
+- Must be a valid number (type check)
+- Minimum 1, maximum 100,000,000
+- Proper error messages for invalid values
+
+**Birth Date:**
+- Must be valid date
+- Employee must be at least 18 years old
+- Cannot be in the future
+- Proper age calculation accounting for months/days
+
+**Files Changed:**
+- `apps/frontend/src/utils/validation.ts` (lines 4-64)
+
+---
+
+### 10. ✅ Fixed Edit Employee Form
+**Issue:** When editing employees, could assign them as their own manager, and managers weren't filtered by department.
+
+**Solution:**
+- Added `selectedDepartmentForEdit` state to track department selection in edit form
+- Manager dropdown now:
+  - Filters by selected department only
+  - Excludes the employee being edited (prevents self-assignment)
+  - Shows helpful message if no managers in department
+  - Requires department selection first
+- Department changes clear manager selection
+- Visual feedback when no managers available
+
+**Files Changed:**
+- `apps/frontend/src/components/EmployeeTable.tsx` (lines 46, 173-174, 693-694, 751-814)
+
+**Key Features:**
+- Self-assignment prevention (built-in check)
+- Department-based manager filtering
+- Clear workflow: select department → see managers in that department
+- Helpful warnings when no managers available
+- Prevents logical errors in hierarchy
+
+---
+
 ## Summary of Files Modified
 
-1. `apps/frontend/src/components/EmployeeTable.tsx` - Major updates to form logic
+1. `apps/frontend/src/components/EmployeeTable.tsx` - Major form logic updates, delete handling, error messages
 2. `apps/frontend/src/components/DashboardStats.tsx` - Enhanced metrics and calculations
-3. `USER_GUIDE.md` - Comprehensive documentation updates
+3. `apps/frontend/src/pages/auth/login.tsx` - Improved login error messages
+4. `apps/frontend/src/pages/profile.tsx` - Enhanced profile and password change messages
+5. `apps/frontend/src/components/DataExport.tsx` - Better export feedback messages
+6. `apps/frontend/src/components/ProfilePictureUpload.tsx` - Detailed upload/remove messages
+7. `USER_GUIDE.md` - Comprehensive documentation updates
+8. `CHANGES_SUMMARY.md` - This document
 
 ---
 
@@ -180,4 +351,9 @@ This document outlines all the fixes and improvements made to the EPI-USE Employ
 - Role-based permissions remain unchanged and respected
 - No database schema changes required
 - All changes are frontend-only, no backend API modifications needed
-- User experience significantly improved with clearer workflows and better feedback
+- User experience significantly improved with:
+  - Clearer workflows and better feedback
+  - Descriptive, actionable error messages
+  - Personalized success messages
+  - Proactive validation and warnings
+  - Context-aware guidance

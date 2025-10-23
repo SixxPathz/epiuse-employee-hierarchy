@@ -58,7 +58,7 @@ export default function ProfilePictureUpload({ user, onUpdate }: ProfilePictureU
       return response.data;
     },
     onSuccess: (data) => {
-      toast.success('Profile picture updated successfully!');
+      toast.success('✅ Your profile picture has been updated successfully!', { duration: 4000 });
       setPreviewUrl(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -86,7 +86,14 @@ export default function ProfilePictureUpload({ user, onUpdate }: ProfilePictureU
       // The localStorage update and event dispatch should be sufficient
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error || 'Failed to upload profile picture');
+      const errorMessage = error.response?.data?.error || error.message;
+      if (errorMessage?.includes('size') || errorMessage?.includes('large')) {
+        toast.error('⚠️ Image too large: Please select an image smaller than 5MB.', { duration: 5000 });
+      } else if (errorMessage?.includes('format') || errorMessage?.includes('type')) {
+        toast.error('⚠️ Invalid format: Please use JPEG, PNG, GIF, or WebP images only.', { duration: 5000 });
+      } else {
+        toast.error(`❌ Failed to upload profile picture: ${errorMessage || 'Please try again.'}`, { duration: 5000 });
+      }
       setPreviewUrl(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -103,7 +110,7 @@ export default function ProfilePictureUpload({ user, onUpdate }: ProfilePictureU
       return response.data;
     },
     onSuccess: () => {
-      toast.success('Profile picture removed successfully!');
+      toast.success('✅ Your profile picture has been removed. Your Gravatar will be displayed instead.', { duration: 4000 });
       
       // Update user data in localStorage immediately
       const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
@@ -123,7 +130,8 @@ export default function ProfilePictureUpload({ user, onUpdate }: ProfilePictureU
       // The localStorage update and event dispatch should be sufficient
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error || 'Failed to remove profile picture');
+      const errorMessage = error.response?.data?.error || error.message;
+      toast.error(`❌ Failed to remove profile picture: ${errorMessage || 'Please try again.'}`, { duration: 5000 });
     },
   });
 
@@ -134,14 +142,15 @@ export default function ProfilePictureUpload({ user, onUpdate }: ProfilePictureU
     // Validate file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      toast.error('Please select a valid image file (JPEG, PNG, GIF, or WebP)');
+      toast.error('⚠️ Invalid file type: Please select a valid image file (JPEG, PNG, GIF, or WebP).', { duration: 5000 });
       return;
     }
 
     // Validate file size (5MB max)
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
-      toast.error('File size must be less than 5MB');
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      toast.error(`⚠️ File too large: Your image is ${sizeMB}MB. Please select an image smaller than 5MB.`, { duration: 5000 });
       return;
     }
 

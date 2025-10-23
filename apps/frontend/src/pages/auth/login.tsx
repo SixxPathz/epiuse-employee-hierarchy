@@ -40,7 +40,8 @@ export default function Login() {
       });
 
       if (result.user) {
-        toast.success('Login successful!');
+        const userName = result.user.employee ? `${result.user.employee.firstName} ${result.user.employee.lastName}` : result.user.email;
+        toast.success(`✅ Welcome back, ${userName}!`, { duration: 3000 });
         
         // Redirect based on role
         const redirectPath = result.user.role === 'ADMIN' ? '/dashboard' : '/employees';
@@ -48,7 +49,16 @@ export default function Login() {
       }
     } catch (error: any) {
       console.error('Login error:', error);
-      toast.error(error.response?.data?.error || 'Invalid credentials. Please check your email and password.');
+      const errorMessage = error.response?.data?.error || error.message;
+      if (errorMessage?.includes('Invalid') || errorMessage?.includes('credentials')) {
+        toast.error('❌ Login failed: Incorrect email or password. Please try again.', { duration: 5000 });
+      } else if (errorMessage?.includes('not found')) {
+        toast.error('❌ Account not found: This email is not registered in our system.', { duration: 5000 });
+      } else if (errorMessage?.includes('locked') || errorMessage?.includes('disabled')) {
+        toast.error('⚠️ Account locked: Please contact your administrator for assistance.', { duration: 6000 });
+      } else {
+        toast.error(`❌ Login failed: ${errorMessage || 'Please check your credentials and try again.'}`, { duration: 5000 });
+      }
     }
   };
 

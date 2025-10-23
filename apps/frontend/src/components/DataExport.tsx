@@ -46,10 +46,11 @@ export default function DataExport({ user }: DataExportProps) {
       const filename = response.headers['content-disposition']
         ?.match(/filename="(.+)"/)?.[1] || 'employees_export.csv';
       downloadFile(response.data, filename);
-      toast.success('Employee data exported successfully!');
+      toast.success(`✅ Employee data successfully exported to ${filename}. Check your downloads folder.`, { duration: 5000 });
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error || 'Failed to export employee data');
+      const errorMessage = error.response?.data?.error || error.message;
+      toast.error(`❌ Failed to export employee data: ${errorMessage || 'Please try again or contact support.'}`, { duration: 5000 });
     },
     onSettled: () => {
       setIsExporting(null);
@@ -68,10 +69,11 @@ export default function DataExport({ user }: DataExportProps) {
       const filename = response.headers['content-disposition']
         ?.match(/filename="(.+)"/)?.[1] || 'organization_hierarchy.json';
       downloadFile(response.data, filename);
-      toast.success('Organization hierarchy exported successfully!');
+      toast.success(`✅ Organization hierarchy successfully exported to ${filename}. Check your downloads folder.`, { duration: 5000 });
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error || 'Failed to export hierarchy data');
+      const errorMessage = error.response?.data?.error || error.message;
+      toast.error(`❌ Failed to export hierarchy data: ${errorMessage || 'Please try again or contact support.'}`, { duration: 5000 });
     },
     onSettled: () => {
       setIsExporting(null);

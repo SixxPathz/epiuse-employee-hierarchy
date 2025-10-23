@@ -42,6 +42,8 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
   // Removed searchPosition state (search by position is deprecated)
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [selectedDepartmentForAdd, setSelectedDepartmentForAdd] = useState(''); // Track department in add form
+  const [selectedManagerIdForAdd, setSelectedManagerIdForAdd] = useState(''); // Track selected manager when adding manager
+  const [selectedDepartmentForEdit, setSelectedDepartmentForEdit] = useState(''); // Track department in edit form
   const [sortBy, setSortBy] = useState('firstName');
   const [sortOrder, setSortOrder] = useState('asc');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -169,6 +171,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
   // Effect to prepopulate edit form when editingEmployee changes
   useEffect(() => {
     if (editingEmployee && showEditModal) {
+      setSelectedDepartmentForEdit(editingEmployee.department || '');
       resetEdit({
         firstName: editingEmployee.firstName,
         lastName: editingEmployee.lastName,
@@ -345,11 +348,31 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
           setShowEditModal(true);
         }}
         onDelete={empId => {
-          if (window.confirm('Are you sure you want to delete this employee?')) {
+          const employeeToDelete = employees.find(e => e.id === empId);
+          if (!employeeToDelete) return;
+          
+          const hasSubordinates = employeeToDelete.subordinates && employeeToDelete.subordinates.length > 0;
+          const employeeName = `${employeeToDelete.firstName} ${employeeToDelete.lastName}`;
+          
+          let confirmMessage = `Are you sure you want to delete ${employeeName}?`;
+          if (hasSubordinates && employeeToDelete.subordinates) {
+            confirmMessage = `⚠️ Warning: ${employeeName} has ${employeeToDelete.subordinates.length} subordinate(s) reporting to them.\n\nYou must reassign or remove these employees first before deleting this manager.\n\nSubordinates:\n${employeeToDelete.subordinates.map(s => `• ${s.firstName} ${s.lastName} (${s.position})`).join('\n')}`;
+            toast.error(confirmMessage, { duration: 6000 });
+            return;
+          }
+          
+          if (window.confirm(confirmMessage + '\n\nThis action cannot be undone.')) {
             deleteEmployeeMutation.mutateAsync(empId).then(() => {
-              toast.success('Employee deleted successfully!');
+              toast.success(`${employeeName} has been successfully removed from the system.`);
             }).catch(err => {
-              toast.error('Failed to delete employee');
+              const errorMessage = err?.response?.data?.error || err?.message || 'Unable to delete employee';
+              if (errorMessage.includes('subordinates') || errorMessage.includes('employees assigned')) {
+                toast.error(`Cannot delete ${employeeName}: This manager has employees reporting to them. Please reassign subordinates first.`, { duration: 6000 });
+              } else if (errorMessage.includes('CEO')) {
+                toast.error('Cannot delete the CEO: The organization must always have a CEO.', { duration: 5000 });
+              } else {
+                toast.error(`Failed to delete ${employeeName}: ${errorMessage}`, { duration: 5000 });
+              }
             });
           }
         }}
@@ -388,6 +411,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 onClick={() => {
                   setShowAddModal(false);
                   setSelectedDepartmentForAdd('');
+                  setSelectedManagerIdForAdd('');
                   reset({
                     department: user?.role === 'MANAGER' ? user.employee?.department : '',
                     managerId: user?.role === 'MANAGER' ? user.employee?.id : '',
@@ -433,17 +457,29 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 }
                 // Prevent adding employee if no manager exists for department
                 if (!payload.managerId) {
-                  toast.error('No manager exists for the selected department. Please add a manager first.');
+                  toast.error(`Cannot add employee to ${formatDepartmentName(dept)}: No manager exists in this department. Please add a manager first.`, { duration: 5000 });
                   return;
                 }
               }
               
-              addEmployeeMutation.mutateAsync(payload).then(() => {
-                toast.success(`${addType === 'manager' ? 'Manager' : 'Employee'} added successfully!`);
+              addEmployeeMutation.mutateAsync(payload).then((response) => {
+                const name = `${data.firstName} ${data.lastName}`;
+                if (addType === 'manager') {
+                  toast.success(`✅ ${name} has been added as a ${data.position} in the ${formatDepartmentName(data.department)} department.`, { duration: 4000 });
+                } else {
+                  toast.success(`✅ ${name} has been successfully added to your team.`, { duration: 4000 });
+                }
                 setShowAddModal(false);
                 reset();
               }).catch(err => {
-                toast.error(handleApiError(err, `Failed to add ${addType}`));
+                const errorMessage = err?.response?.data?.error || err?.message;
+                if (errorMessage?.includes('already exists') || errorMessage?.includes('duplicate')) {
+                  toast.error(`⚠️ Cannot add employee: This email or employee number is already in use. Please use a different one.`, { duration: 5000 });
+                } else if (errorMessage?.includes('validation')) {
+                  toast.error(`⚠️ Invalid data: Please check all fields and try again. ${errorMessage}`, { duration: 5000 });
+                } else {
+                  toast.error(`❌ Failed to add ${data.firstName} ${data.lastName}: ${errorMessage || 'Please try again.'}`, { duration: 5000 });
+                }
               });
             })} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -480,7 +516,27 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
                   {addType === 'manager' && user?.role === 'MANAGER' ? (
                     <input type="text" className="input-field bg-gray-100" value={formatDepartmentName(normalizeDept(user.employee?.department || ''))} disabled {...register('department')} />
-                  ) : addType === 'manager' && user?.role === 'ADMIN' ? (
+                  ) : addType === 'manager' && user?.role === 'ADMIN' && selectedManagerIdForAdd && selectedManagerIdForAdd === ceoEmployee?.id ? (
+                    // CEO selected - allow new department
+                    <>
+                      <input {...register('department', {
+                        setValueAs: v => normalizeDept(v)
+                      })} type="text" className={`input-field ${errors.department ? 'border-red-300' : ''}`} placeholder="Enter new department" />
+                      {isDuplicateDepartment ? (
+                        <p className="text-red-500 text-xs mt-1">Department already exists (case-insensitive).</p>
+                      ) : null}
+                    </>
+                  ) : addType === 'manager' && user?.role === 'ADMIN' && selectedManagerIdForAdd && selectedManagerIdForAdd !== ceoEmployee?.id ? (
+                    // Other manager selected - prefill their department
+                    <input 
+                      type="text" 
+                      className="input-field bg-gray-100" 
+                      value={formatDepartmentName(normalizeDept((managersData?.employees || []).find((m: Employee) => m.id === selectedManagerIdForAdd)?.department || ''))} 
+                      disabled 
+                      {...register('department')} 
+                    />
+                  ) : addType === 'manager' && user?.role === 'ADMIN' && !selectedManagerIdForAdd ? (
+                    // No manager selected yet for new manager
                     <>
                       <input {...register('department', {
                         setValueAs: v => normalizeDept(v)
@@ -551,7 +607,23 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Reports To
                   </label>
-                  <select {...register('managerId')} className="input-field">
+                  <select 
+                    {...register('managerId')} 
+                    className="input-field"
+                    onChange={(e) => {
+                      setSelectedManagerIdForAdd(e.target.value);
+                      // Auto-fill department when manager selected
+                      if (e.target.value && e.target.value !== ceoEmployee?.id) {
+                        const selectedManager = (managersData?.employees || []).find((m: Employee) => m.id === e.target.value);
+                        if (selectedManager) {
+                          setValue('department', selectedManager.department);
+                        }
+                      } else if (e.target.value === ceoEmployee?.id) {
+                        // CEO selected - clear department so user can enter new one
+                        setValue('department', '');
+                      }
+                    }}
+                  >
                     <option value="">{ceoEmployee ? 'Select who this manager reports to' : 'No Manager (Top Level)'}</option>
                     {ceoEmployee && (
                       <option key={ceoEmployee.id} value={ceoEmployee.id}>
@@ -560,13 +632,17 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                     )}
                     {managersData?.employees?.filter((m: Employee) => !isCEO(m)).map((manager: Employee) => (
                       <option key={manager.id} value={manager.id}>
-                        {manager.firstName} {manager.lastName} - {manager.position}
+                        {manager.firstName} {manager.lastName} - {manager.position} ({formatDepartmentName(manager.department)})
                       </option>
                     ))}
                   </select>
                   <p className="text-xs text-gray-500 mt-1">
                     {ceoEmployee 
-                      ? 'Select CEO for department head, or another manager for a sub-manager role'
+                      ? selectedManagerIdForAdd === ceoEmployee.id 
+                        ? 'CEO selected: Enter a new department name for this department head'
+                        : selectedManagerIdForAdd
+                        ? 'This manager will work in the same department as their supervisor'
+                        : 'Select CEO to create a department head, or another manager for a sub-manager'
                       : 'Leave empty to create the first top-level manager (CEO)'}
                   </p>
                 </div>
@@ -585,6 +661,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                   onClick={() => {
                     setShowAddModal(false);
                     setSelectedDepartmentForAdd('');
+                    setSelectedManagerIdForAdd('');
                     reset();
                   }}
                   className="btn-outline"
@@ -614,6 +691,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 onClick={() => {
                   setShowEditModal(false);
                   setEditingEmployee(null);
+                  setSelectedDepartmentForEdit('');
                   resetEdit();
                 }}
                 className="text-gray-400 hover:text-gray-600"
@@ -622,13 +700,21 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
               </button>
             </div>
             <form onSubmit={handleSubmitEdit(data => {
+              const employeeName = `${editingEmployee.firstName} ${editingEmployee.lastName}`;
               updateEmployeeMutation.mutateAsync({ ...data, id: editingEmployee.id }).then(() => {
-                toast.success('Employee updated successfully!');
+                toast.success(`✅ ${data.firstName} ${data.lastName}'s information has been successfully updated.`, { duration: 4000 });
                 setShowEditModal(false);
                 setEditingEmployee(null);
                 resetEdit();
               }).catch(err => {
-                toast.error('Failed to update employee');
+                const errorMessage = err?.response?.data?.error || err?.message;
+                if (errorMessage?.includes('already exists') || errorMessage?.includes('duplicate')) {
+                  toast.error(`⚠️ Cannot update ${employeeName}: This email or employee number is already in use by another employee.`, { duration: 5000 });
+                } else if (errorMessage?.includes('not found')) {
+                  toast.error(`⚠️ Employee not found: ${employeeName} may have been deleted. Please refresh the page.`, { duration: 5000 });
+                } else {
+                  toast.error(`❌ Failed to update ${employeeName}: ${errorMessage || 'Please try again.'}`, { duration: 5000 });
+                }
               });
             })} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -663,7 +749,15 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                  <select {...registerEdit('department')} className={`input-field ${editErrors.department ? 'border-red-300' : ''}`}> 
+                  <select 
+                    {...registerEdit('department')} 
+                    className={`input-field ${editErrors.department ? 'border-red-300' : ''}`}
+                    onChange={(e) => {
+                      setSelectedDepartmentForEdit(e.target.value);
+                      // Clear manager selection when department changes
+                      setValueEdit('managerId', '');
+                    }}
+                  > 
                     <option value="">Select Department</option>
                     {departments.map(dep => (
                       <option key={dep} value={dep}>{formatDepartmentName(dep)}</option>
@@ -685,15 +779,39 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Manager (Optional)</label>
-                <select {...registerEdit('managerId')} className="input-field">
-                  <option value="">Select a manager</option>
-                  {managersData?.employees?.map((manager: Employee) => (
-                    <option key={manager.id} value={manager.id}>
-                      {manager.firstName} {manager.lastName} - {manager.position}
-                    </option>
-                  ))}
-                </select>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Manager</label>
+                {selectedDepartmentForEdit ? (
+                  <>
+                    <select {...registerEdit('managerId')} className="input-field">
+                      <option value="">Select a manager in {formatDepartmentName(selectedDepartmentForEdit)}</option>
+                      {(managersData?.employees || []).filter((manager: Employee) => {
+                        // Filter managers by selected department and exclude self
+                        return normalizeDept(manager.department) === normalizeDept(selectedDepartmentForEdit) 
+                          && manager.id !== editingEmployee?.id;
+                      }).map((manager: Employee) => (
+                        <option key={manager.id} value={manager.id}>
+                          {manager.firstName} {manager.lastName} - {manager.position}
+                        </option>
+                      ))}
+                    </select>
+                    {(managersData?.employees || []).filter((m: Employee) => 
+                      normalizeDept(m.department) === normalizeDept(selectedDepartmentForEdit) && m.id !== editingEmployee?.id
+                    ).length === 0 && (
+                      <p className="text-yellow-600 text-xs mt-1">
+                        ⚠️ No managers available in this department. This employee will have no manager assigned.
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <select disabled className="input-field bg-gray-100">
+                      <option value="">Select a department first</option>
+                    </select>
+                    <p className="text-gray-500 text-xs mt-1">
+                      Please select a department to see available managers
+                    </p>
+                  </>
+                )}
               </div>
               <div className="flex justify-end space-x-3 pt-4">
                 <button
