@@ -1,13 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
 import toast from 'react-hot-toast';
 import {
   MagnifyingGlassIcon,
   PlusIcon,
-  PencilIcon,
-  TrashIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { getUserPermissions } from '../utils/permissions';
@@ -22,8 +19,8 @@ import {
   usePrefetchEmployee,
 } from '../hooks/useEmployees';
 import { normalizeDept, getDepartments } from '../utils/departments';
-import { isManager, isCEO, getManagers } from '../utils/roles';
-import { addEmployeeSchema, handleApiError } from '../utils/validation';
+import { isCEO, getManagers } from '../utils/roles';
+import { addEmployeeSchema } from '../utils/validation';
 import type { EmployeeFormData as AddEmployeeFormData, User } from '../types';
 import type { Employee } from '../types';
 
@@ -35,17 +32,14 @@ interface EmployeeTableProps {
 export default function EmployeeTable({ user }: EmployeeTableProps) {
   // State hooks
   const [addType, setAddType] = useState<'employee' | 'manager'>('employee');
-  const [customDepartment, setCustomDepartment] = useState('');
-  const [showCustomDepartment, setShowCustomDepartment] = useState(false);
   const [searchName, setSearchName] = useState('');
   const [searchEmployeeNumber, setSearchEmployeeNumber] = useState('');
-  // Removed searchPosition state (search by position is deprecated)
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [selectedDepartmentForAdd, setSelectedDepartmentForAdd] = useState(''); // Track department in add form
   const [selectedManagerIdForAdd, setSelectedManagerIdForAdd] = useState(''); // Track selected manager when adding manager
   const [selectedDepartmentForEdit, setSelectedDepartmentForEdit] = useState(''); // Track department in edit form
-  const [sortBy, setSortBy] = useState('firstName');
-  const [sortOrder, setSortOrder] = useState('asc');
+  const [sortBy] = useState('firstName');
+  const [sortOrder] = useState('asc');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
@@ -68,7 +62,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
     sortOrder,
   });
 
-  const { data: managersData, isLoading: managersLoading } = useManagers();
+  const { data: managersData } = useManagers();
 
 
   // Employees and managers
@@ -95,38 +89,24 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
   }, [allEmployees]);
 
   const departments = getDepartments(allEmployees);
-  const departmentsWithManagers = new Set<string>(Array.from(departmentManagerMap.keys()));
-  const availableDepartmentsForManager = departments.filter(dep => !departmentsWithManagers.has(dep));
-  const isDuplicateDepartment = customDepartment && departments.includes(normalizeDept(customDepartment));
+
+  // Check for duplicate department names (case-insensitive)
+  const isDuplicateDepartment = useMemo(() => {
+    if (!selectedDepartmentForAdd) return false;
+    const normalizedNewDept = normalizeDept(selectedDepartmentForAdd);
+    return departments.some(dept => normalizeDept(dept) === normalizedNewDept);
+  }, [selectedDepartmentForAdd, departments]);
 
   // Managers in selected department for add form
   const managersInSelectedDepartment = (managersData?.employees || []).filter(
     (mgr: Employee) => normalizeDept(mgr.department) === normalizeDept(selectedDepartmentForAdd || '')
   );
-  const noManagersExist = (managersData?.employees || []).length === 0;
   
   // CEO from all managers
   const ceoEmployee = (managersData?.employees || []).find(isCEO);
 
   // Get user permissions
   const permissions = getUserPermissions(user?.role || 'EMPLOYEE');
-
-  // Helper function to determine if current user can view specific employee's salary
-  const canViewEmployeeSalary = (employee: Employee): boolean => {
-    if (!permissions.canViewSalaries) return false;
-    if (user?.role === 'ADMIN') return true;
-    if (user?.role === 'MANAGER') {
-      if (employee.id === user.employee?.id) return true;
-      const isSubordinate = (emp: Employee, managerId: string): boolean => {
-        if (!emp.manager) return false;
-        if (emp.manager.id === managerId) return true;
-        // Type guard: emp.manager is Employee
-        return isSubordinate(emp.manager as Employee, managerId);
-      };
-      return user.employee?.id ? isSubordinate(employee, user.employee.id) : false;
-    }
-    return false;
-  };
 
   // Mutations
   const addEmployeeMutation = useAddEmployee();
@@ -140,7 +120,6 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
   handleSubmit,
   reset,
   setValue,
-  getValues,
   formState: { errors, isSubmitting },
   } = useForm<AddEmployeeFormData>({
     resolver: yupResolver(addEmployeeSchema),
@@ -423,7 +402,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
               </button>
             </div>
             <form onSubmit={handleSubmit(data => {
-              let payload = { 
+              const payload = { 
                 ...data,
                 isManager: addType === 'manager' // Explicitly set role based on button choice
               };
@@ -465,7 +444,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 }
               }
               
-              addEmployeeMutation.mutateAsync(payload).then((response) => {
+              addEmployeeMutation.mutateAsync(payload).then(() => {
                 const name = `${data.firstName} ${data.lastName}`;
                 if (addType === 'manager') {
                   toast.success(`✅ ${name} has been added as a ${data.position} in the ${formatDepartmentName(data.department)} department.`, { duration: 4000 });
@@ -518,7 +497,13 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
                   {addType === 'manager' && user?.role === 'MANAGER' ? (
-                    <input type="text" className="input-field bg-gray-100" value={formatDepartmentName(normalizeDept(user.employee?.department || ''))} disabled {...register('department')} />
+                    <input 
+                      type="text" 
+                      className="input-field bg-gray-100" 
+                      value={formatDepartmentName(normalizeDept(user.employee?.department || ''))} 
+                      disabled 
+                      {...register('department')} 
+                    />
                   ) : addType === 'manager' && user?.role === 'ADMIN' && selectedManagerIdForAdd && selectedManagerIdForAdd === ceoEmployee?.id ? (
                     // CEO selected - allow new department
                     <>
