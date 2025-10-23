@@ -43,6 +43,7 @@ export interface OrganizationNode {
   email: string;
   salary: number;
   employeeNumber: string;
+  role: 'ADMIN' | 'MANAGER' | 'EMPLOYEE';
   children: OrganizationNode[];
 }
 

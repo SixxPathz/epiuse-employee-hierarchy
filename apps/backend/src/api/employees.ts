@@ -1099,7 +1099,7 @@ router.get('/stats/dashboard', async (req: Request, res: Response) => {
 // Get organization hierarchy with unlimited depth
 router.get('/hierarchy/tree', async (req: Request, res: Response) => {
   try {
-    // Get all employees without nested includes (flat structure)
+    // Get all employees with their user roles
     const employees = await prisma.employee.findMany({
       select: {
         id: true,
@@ -1109,7 +1109,12 @@ router.get('/hierarchy/tree', async (req: Request, res: Response) => {
         email: true,
         salary: true,
         employeeNumber: true,
-        managerId: true
+        managerId: true,
+        user: {
+          select: {
+            role: true
+          }
+        }
       }
     });
 
@@ -1138,6 +1143,7 @@ router.get('/hierarchy/tree', async (req: Request, res: Response) => {
         email: employee.email,
         salary: employee.salary,
         employeeNumber: employee.employeeNumber,
+        role: employee.user?.role || 'EMPLOYEE',
         children: subordinates.map(sub => buildTree(sub.id)).filter(Boolean)
       };
     };

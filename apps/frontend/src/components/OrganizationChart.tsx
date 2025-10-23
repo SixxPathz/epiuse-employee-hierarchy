@@ -255,7 +255,7 @@ export default function OrganizationChart() {
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">
-                  {allNodes.filter(n => n.children && n.children.length > 0).length}
+                  {allNodes.filter(n => n.role === 'MANAGER').length}
                 </div>
                 <div className="text-sm text-gray-500">Managers</div>
               </div>
