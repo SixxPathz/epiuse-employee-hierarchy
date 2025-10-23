@@ -202,6 +202,7 @@ router.get('/', [
             select: {
               id: true,
               managerId: true,
+              department: true,
               subordinates: { select: { id: true } }
             }
           }
@@ -231,12 +232,22 @@ router.get('/', [
 
         where.id = { in: validManagerIds };
       } else if (currentUser.role === 'MANAGER') {
-        // Managers can ONLY assign employees to themselves
-        // NO access to assign to CEO or other managers
+        // Managers can assign employees to themselves or other managers in their department
         const currentManager = currentUserDetails?.employee;
         if (currentManager) {
+          // Get all managers in the same department
+          const departmentManagers = await prisma.employee.findMany({
+            where: {
+              department: currentManager.department,
+              user: {
+                role: { in: ['ADMIN', 'MANAGER'] }
+              }
+            },
+            select: { id: true }
+          });
+          
           where.id = { 
-            in: [currentManager.id] // Only themselves
+            in: departmentManagers.map(m => m.id)
           };
         }
       } else {
@@ -554,16 +565,29 @@ router.post('/', [
 
         // Validate department-manager alignment
         if (currentUser.role === 'MANAGER') {
-          // Managers can assign employees and sub-managers to themselves within their department
+          // Managers can assign employees and sub-managers to themselves or other managers within their department
           const currentManager = await prisma.user.findUnique({
             where: { id: currentUser.userId },
             include: { employee: true }
           });
 
-          if (currentManager?.employee?.id !== managerId) {
-            return res.status(403).json({ 
-              error: 'Managers can only assign employees and sub-managers to themselves' 
+          if (!currentManager?.employee) {
+            return res.status(403).json({ error: 'Manager record not found' });
+          }
+
+          // Allow assignment to self or other managers in the same department
+          if (currentManager.employee.id !== managerId) {
+            // Check if the target manager is in the same department
+            const targetManager = await prisma.employee.findUnique({
+              where: { id: managerId },
+              select: { department: true }
             });
+
+            if (!targetManager || targetManager.department !== currentManager.employee.department) {
+              return res.status(403).json({ 
+                error: 'Managers can only assign employees to themselves or other managers within their department' 
+              });
+            }
           }
           
           // Ensure the selected department matches the manager's department
@@ -740,15 +764,19 @@ router.put('/:id', [
 
         // If updating managerId, ensure it's valid for this manager
         if (updateData.managerId) {
-          const validManagerIds = [currentManager.employee.id];
-          if (currentManager.employee.managerId) {
-            validManagerIds.push(currentManager.employee.managerId);
-          }
-
-          if (!validManagerIds.includes(updateData.managerId)) {
-            return res.status(403).json({ 
-              error: 'Managers can only assign employees to themselves or their direct superiors' 
+          // Allow assignment to self or other managers in the same department
+          if (currentManager.employee.id !== updateData.managerId) {
+            // Check if the target manager is in the same department
+            const targetManager = await prisma.employee.findUnique({
+              where: { id: updateData.managerId },
+              select: { department: true }
             });
+
+            if (!targetManager || targetManager.department !== currentManager.employee.department) {
+              return res.status(403).json({ 
+                error: 'Managers can only assign employees to themselves or other managers within their department' 
+              });
+            }
           }
         }
       }

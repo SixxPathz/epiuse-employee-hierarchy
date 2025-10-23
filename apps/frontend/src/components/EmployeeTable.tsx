@@ -424,11 +424,14 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 }
               }
               
-              // If adding an employee, auto-assign managerId
+              // If adding an employee, handle managerId assignment
               if (addType === 'employee') {
                 let dept = normalizeDept(payload.department);
                 if (user?.role === 'MANAGER' && user.employee?.id) {
-                  payload.managerId = user.employee.id;
+                  // For managers, use the selected managerId from the form or default to themselves
+                  if (!payload.managerId) {
+                    payload.managerId = user.employee.id;
+                  }
                   payload.department = user.employee.department;
                   dept = normalizeDept(user.employee.department);
                 } else if (user?.role === 'ADMIN') {
@@ -586,6 +589,39 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                       </p>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* Manager selection for adding employees as manager */}
+              {addType === 'employee' && user?.role === 'MANAGER' && user.employee?.department && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Assign to Manager
+                  </label>
+                  {(managersData?.employees || []).filter((manager: Employee) => 
+                    normalizeDept(manager.department) === normalizeDept(user.employee?.department || '')
+                  ).length > 0 ? (
+                    <select {...register('managerId')} className="input-field">
+                      <option value="">Select a manager in your department</option>
+                      {(managersData?.employees || []).filter((manager: Employee) => 
+                        normalizeDept(manager.department) === normalizeDept(user.employee?.department || '')
+                      ).map((manager: Employee) => (
+                        <option key={manager.id} value={manager.id}>
+                          {manager.firstName} {manager.lastName} - {manager.position}
+                          {manager.id === user.employee?.id ? ' (You)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                      <p className="text-sm text-yellow-800">
+                        No managers found in your department. The employee will be assigned to you by default.
+                      </p>
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">
+                    You can assign this employee to yourself or other managers within your department.
+                  </p>
                 </div>
               )}
               
@@ -774,19 +810,42 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                       <option value="">Select a manager in {formatDepartmentName(selectedDepartmentForEdit)}</option>
                       {(managersData?.employees || []).filter((manager: Employee) => {
                         // Filter managers by selected department and exclude self
-                        return normalizeDept(manager.department) === normalizeDept(selectedDepartmentForEdit) 
-                          && manager.id !== editingEmployee?.id;
+                        const isInDepartment = normalizeDept(manager.department) === normalizeDept(selectedDepartmentForEdit);
+                        const isNotSelf = manager.id !== editingEmployee?.id;
+                        
+                        // For managers, only show managers in their own department
+                        if (user?.role === 'MANAGER') {
+                          const isInCurrentUserDepartment = normalizeDept(manager.department) === normalizeDept(user.employee?.department || '');
+                          return isInDepartment && isNotSelf && isInCurrentUserDepartment;
+                        }
+                        
+                        // For admins, show all managers in the selected department
+                        return isInDepartment && isNotSelf;
                       }).map((manager: Employee) => (
                         <option key={manager.id} value={manager.id}>
                           {manager.firstName} {manager.lastName} - {manager.position}
+                          {user?.role === 'MANAGER' && manager.id === user.employee?.id ? ' (You)' : ''}
                         </option>
                       ))}
                     </select>
-                    {(managersData?.employees || []).filter((m: Employee) => 
-                      normalizeDept(m.department) === normalizeDept(selectedDepartmentForEdit) && m.id !== editingEmployee?.id
-                    ).length === 0 && (
+                    {(managersData?.employees || []).filter((m: Employee) => {
+                      const isInDepartment = normalizeDept(m.department) === normalizeDept(selectedDepartmentForEdit);
+                      const isNotSelf = m.id !== editingEmployee?.id;
+                      
+                      if (user?.role === 'MANAGER') {
+                        const isInCurrentUserDepartment = normalizeDept(m.department) === normalizeDept(user.employee?.department || '');
+                        return isInDepartment && isNotSelf && isInCurrentUserDepartment;
+                      }
+                      
+                      return isInDepartment && isNotSelf;
+                    }).length === 0 && (
                       <p className="text-yellow-600 text-xs mt-1">
                         ⚠️ No managers available in this department. This employee will have no manager assigned.
+                      </p>
+                    )}
+                    {user?.role === 'MANAGER' && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        You can assign this employee to yourself or other managers within your department.
                       </p>
                     )}
                   </>
