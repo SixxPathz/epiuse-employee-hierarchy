@@ -36,98 +36,167 @@ const EmployeeRow: React.FC<EmployeeRowProps> = ({
   index,
 }) => {
   return (
-    <div
-      className={`flex items-center border-b border-gray-200 hover:bg-gray-50 px-6 py-4 ${
-        index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-      }`}
-      style={{ height: '80px' }}
-    >
-      {/* Employee Info */}
-      <div className="flex-1 flex items-center min-w-0">
-        <div className="flex-shrink-0 h-10 w-10">
-          <ProfileImage
-            user={{ email: employee.email, employee: employee }}
-            size={40}
-            className="h-10 w-10 rounded-full object-cover"
-            alt={`${employee.firstName} ${employee.lastName}`}
-          />
-        </div>
-        <div className="ml-4 min-w-0">
-          <div className="text-sm font-medium text-gray-900 truncate">
-            {employee.firstName} {employee.lastName}
+    <>
+      {/* Desktop View */}
+      <div
+        className={`hidden md:flex items-center border-b border-gray-200 hover:bg-gray-50 px-6 py-4 ${
+          index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+        }`}
+        style={{ height: '80px' }}
+      >
+        {/* Employee Info */}
+        <div className="flex-1 flex items-center min-w-0">
+          <div className="flex-shrink-0 h-10 w-10">
+            <ProfileImage
+              user={{ email: employee.email, employee: employee }}
+              size={40}
+              className="h-10 w-10 rounded-full object-cover"
+              alt={`${employee.firstName} ${employee.lastName}`}
+            />
           </div>
-          <div className="text-sm text-gray-500 truncate">{employee.email}</div>
-          <div className="text-xs text-gray-400">#{employee.employeeNumber}</div>
+          <div className="ml-4 min-w-0">
+            <div className="text-sm font-medium text-gray-900 truncate">
+              {employee.firstName} {employee.lastName}
+            </div>
+            <div className="text-sm text-gray-500 truncate">{employee.email}</div>
+            <div className="text-xs text-gray-400">#{employee.employeeNumber}</div>
+          </div>
         </div>
-      </div>
 
-      {/* Position */}
-      <div className="flex-1 px-6">
-        <div className="text-sm text-gray-900 truncate">{employee.position}</div>
-      </div>
-
-      {/* Department */}
-      <div className="flex-1 px-6">
-        <div className="text-sm text-gray-900 truncate capitalize">
-          {formatDepartmentName(employee.department || '')}
-        </div>
-      </div>
-
-      {/* Salary */}
-      {permissions.canViewSalaries && (
+        {/* Position */}
         <div className="flex-1 px-6">
-          <div className="text-sm text-gray-900">
-            {canViewEmployeeSalary(employee) 
-              ? formatCurrency(employee.salary) 
-              : '•••••••'
-            }
+          <div className="text-sm text-gray-900 truncate">{employee.position}</div>
+        </div>
+
+        {/* Department */}
+        <div className="flex-1 px-6">
+          <div className="text-sm text-gray-900 truncate capitalize">
+            {formatDepartmentName(employee.department || '')}
           </div>
         </div>
-      )}
 
-      {/* Manager */}
-      <div className="flex-1 px-6">
-        {employee.manager ? (
-          <div className="text-sm text-gray-900 truncate">
-            {employee.manager.firstName} {employee.manager.lastName}
+        {/* Salary */}
+        {permissions.canViewSalaries && (
+          <div className="flex-1 px-6">
+            <div className="text-sm text-gray-900">
+              {canViewEmployeeSalary(employee) 
+                ? formatCurrency(employee.salary) 
+                : '•••••••'
+              }
+            </div>
           </div>
-        ) : (
-          <span className="text-sm text-gray-500">No manager</span>
         )}
-      </div>
 
-      {/* Joined Date */}
-      <div className="flex-1 px-6">
-        <div className="text-sm text-gray-500">
-          {formatDate(employee.createdAt)}
+        {/* Manager */}
+        <div className="flex-1 px-6">
+          {employee.manager ? (
+            <div className="text-sm text-gray-900 truncate">
+              {employee.manager.firstName} {employee.manager.lastName}
+            </div>
+          ) : (
+            <span className="text-sm text-gray-500">No manager</span>
+          )}
+        </div>
+
+        {/* Joined Date */}
+        <div className="flex-1 px-6">
+          <div className="text-sm text-gray-500">
+            {formatDate(employee.createdAt)}
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex-shrink-0 flex items-center space-x-2 px-6">
+          {permissions.canEditEmployees && (
+            <button 
+              onClick={() => onEdit(employee)}
+              className="text-company-navy hover:text-company-navy-dark"
+              title="Edit Employee"
+            >
+              <PencilIcon className="h-5 w-5" />
+            </button>
+          )}
+          {permissions.canDeleteEmployees && (
+            <button
+              onClick={() => onDelete(employee.id)}
+              className="text-red-600 hover:text-red-900"
+              title="Delete Employee"
+            >
+              <TrashIcon className="h-5 w-5" />
+            </button>
+          )}
+          {!permissions.canEditEmployees && !permissions.canDeleteEmployees && (
+            <span className="text-gray-400 text-xs">View Only</span>
+          )}
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex-shrink-0 flex items-center space-x-2 px-6">
-        {permissions.canEditEmployees && (
-          <button 
-            onClick={() => onEdit(employee)}
-            className="text-company-navy hover:text-company-navy-dark"
-            title="Edit Employee"
-          >
-            <PencilIcon className="h-5 w-5" />
-          </button>
-        )}
-        {permissions.canDeleteEmployees && (
-          <button
-            onClick={() => onDelete(employee.id)}
-            className="text-red-600 hover:text-red-900"
-            title="Delete Employee"
-          >
-            <TrashIcon className="h-5 w-5" />
-          </button>
-        )}
-        {!permissions.canEditEmployees && !permissions.canDeleteEmployees && (
-          <span className="text-gray-400 text-xs">View Only</span>
-        )}
+      {/* Mobile Card View */}
+      <div className={`md:hidden border-b border-gray-200 p-4 ${
+        index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+      }`}>
+        <div className="flex items-start space-x-3">
+          <div className="flex-shrink-0">
+            <ProfileImage
+              user={{ email: employee.email, employee: employee }}
+              size={48}
+              className="h-12 w-12 rounded-full object-cover"
+              alt={`${employee.firstName} ${employee.lastName}`}
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-gray-900 truncate">
+                {employee.firstName} {employee.lastName}
+              </h3>
+              <div className="flex items-center space-x-2 ml-2">
+                {permissions.canEditEmployees && (
+                  <button 
+                    onClick={() => onEdit(employee)}
+                    className="text-company-navy hover:text-company-navy-dark p-1"
+                    title="Edit Employee"
+                  >
+                    <PencilIcon className="h-4 w-4" />
+                  </button>
+                )}
+                {permissions.canDeleteEmployees && (
+                  <button
+                    onClick={() => onDelete(employee.id)}
+                    className="text-red-600 hover:text-red-900 p-1"
+                    title="Delete Employee"
+                  >
+                    <TrashIcon className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 truncate">{employee.position}</p>
+            <p className="text-sm text-gray-500 truncate">{formatDepartmentName(employee.department || '')}</p>
+            <div className="mt-2 flex flex-wrap gap-2 text-xs text-gray-500">
+              <span>#{employee.employeeNumber}</span>
+              <span>•</span>
+              <span className="truncate">{employee.email}</span>
+              {employee.manager && (
+                <>
+                  <span>•</span>
+                  <span className="truncate">Reports to: {employee.manager.firstName} {employee.manager.lastName}</span>
+                </>
+              )}
+            </div>
+            {permissions.canViewSalaries && canViewEmployeeSalary(employee) && (
+              <div className="mt-2">
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  {formatCurrency(employee.salary)}
+                </span>
+              </div>
+            )}
+            <div className="mt-1 text-xs text-gray-400">
+              Joined: {formatDate(employee.createdAt)}
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
@@ -176,8 +245,8 @@ export const VirtualEmployeeTable: React.FC<VirtualEmployeeTableProps> = ({
 
   return (
     <div className="card">
-      {/* Table Header */}
-      <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
+      {/* Table Header - Desktop Only */}
+      <div className="hidden md:block bg-gray-50 px-6 py-3 border-b border-gray-200">
         <div className="flex items-center text-xs font-medium text-gray-500 uppercase tracking-wider">
           <div className="flex-1">Employee</div>
           <div className="flex-1 px-6">Position</div>
@@ -189,6 +258,11 @@ export const VirtualEmployeeTable: React.FC<VirtualEmployeeTableProps> = ({
           <div className="flex-1 px-6">Joined</div>
           <div className="flex-shrink-0 px-6">Actions</div>
         </div>
+      </div>
+
+      {/* Mobile Header */}
+      <div className="md:hidden bg-gray-50 px-4 py-3 border-b border-gray-200">
+        <h3 className="text-sm font-medium text-gray-700">Team Members</h3>
       </div>
 
       {/* Table Content */}

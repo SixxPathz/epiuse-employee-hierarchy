@@ -329,7 +329,7 @@ export default function ProfilePage() {
                   {canEditProfile ? (
                     // Admin edit form
                     <form onSubmit={handleSubmitProfile(onSubmitProfile)} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="form-label">First Name</label>
                           <input
@@ -486,7 +486,7 @@ export default function ProfilePage() {
           )}
 
           {activeTab === 'security' && (
-            <div className="card max-w-md">
+            <div className="card max-w-full md:max-w-md">
               <div className="card-header">
                 <h3 className="text-lg font-semibold">Change Password</h3>
                 <p className="text-sm text-gray-600">Update your account password</p>

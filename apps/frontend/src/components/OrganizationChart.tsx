@@ -81,7 +81,7 @@ export default function OrganizationChart() {
       <div key={node.id} className="mb-2">
         <div
           className="flex items-center p-3 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
-          style={{ marginLeft: `${indentLevel}px` }}
+          style={{ marginLeft: level > 0 ? `${Math.min(indentLevel, 48)}px` : '0px' }}
         >
           {/* Expand/Collapse Button */}
           {hasChildren && (
@@ -97,14 +97,14 @@ export default function OrganizationChart() {
             </button>
           )}
 
-          {/* Connection Line */}
+          {/* Connection Line - Hidden on mobile */}
           {level > 0 && (
-            <div className="absolute w-6 h-px bg-gray-300" style={{ left: `${indentLevel - 12}px` }} />
+            <div className="hidden md:block absolute w-6 h-px bg-gray-300" style={{ left: `${indentLevel - 12}px` }} />
           )}
 
           {/* Employee Avatar */}
           <div className="flex-shrink-0 mr-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-xs md:text-sm">
               {node.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
             </div>
           </div>
@@ -116,9 +116,9 @@ export default function OrganizationChart() {
               {level === 0 && <BuildingOfficeIcon className="h-4 w-4 text-amber-500" />}
             </div>
             <p className="text-xs text-gray-600 truncate">{node.position}</p>
-            <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
+            <div className="flex flex-col md:flex-row md:items-center md:space-x-3 mt-1 text-xs text-gray-500 space-y-1 md:space-y-0">
               <span>ID: {node.employeeNumber}</span>
-              <span>•</span>
+              <span className="hidden md:inline">•</span>
               <span className="truncate">{node.email}</span>
             </div>
           </div>
@@ -128,7 +128,8 @@ export default function OrganizationChart() {
             <div className="flex-shrink-0 ml-2">
               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                 <UserIcon className="h-3 w-3 mr-1" />
-                {node.children.length}
+                <span className="hidden sm:inline">{node.children.length}</span>
+                <span className="sm:hidden">{node.children.length}</span>
               </span>
             </div>
           )}

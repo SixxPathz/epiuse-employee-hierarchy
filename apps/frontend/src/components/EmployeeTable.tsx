@@ -270,24 +270,25 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
 
       {/* Search Bar */}
       <div className="card mb-2">
-        <div className="card-body flex flex-col md:flex-row md:items-center md:space-x-4 space-y-2 md:space-y-0">
-          <div className="flex items-center space-x-2">
+        <div className="card-body">
+          {/* Mobile: Stack vertically */}
+          <div className="flex flex-col space-y-3 md:hidden">
             <input
               type="text"
-              className="input-field"
+              className="input-field w-full"
               placeholder="Search by name..."
               value={searchName}
               onChange={e => setSearchName(e.target.value)}
             />
             <input
               type="text"
-              className="input-field"
+              className="input-field w-full"
               placeholder="Employee number..."
               value={searchEmployeeNumber}
               onChange={e => setSearchEmployeeNumber(e.target.value)}
             />
             <select
-              className="input-field"
+              className="input-field w-full"
               value={selectedDepartment}
               onChange={e => setSelectedDepartment(e.target.value)}
             >
@@ -296,22 +297,68 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 <option key={dep} value={dep}>{formatDepartmentName(dep)}</option>
               ))}
             </select>
+            <div className="flex space-x-2">
+              <button
+                onClick={handleSearch}
+                className="btn-primary flex-1 inline-flex items-center justify-center space-x-2"
+              >
+                <MagnifyingGlassIcon className="h-4 w-4" />
+                <span>Search</span>
+              </button>
+              <button
+                onClick={handleClearSearch}
+                className="btn-secondary flex-1 inline-flex items-center justify-center space-x-2"
+              >
+                <XMarkIcon className="h-4 w-4" />
+                <span>Clear</span>
+              </button>
+            </div>
           </div>
-          <div className="flex items-center space-x-2 mt-2 md:mt-0">
-            <button
-              onClick={handleSearch}
-              className="btn-primary inline-flex items-center justify-center space-x-2"
-            >
-              <MagnifyingGlassIcon className="h-4 w-4" />
-              <span>Search</span>
-            </button>
-            <button
-              onClick={handleClearSearch}
-              className="btn-secondary inline-flex items-center justify-center space-x-2"
-            >
-              <XMarkIcon className="h-4 w-4" />
-              <span>Clear</span>
-            </button>
+
+          {/* Desktop: Horizontal layout */}
+          <div className="hidden md:flex md:items-center md:space-x-4">
+            <div className="flex items-center space-x-2">
+              <input
+                type="text"
+                className="input-field"
+                placeholder="Search by name..."
+                value={searchName}
+                onChange={e => setSearchName(e.target.value)}
+              />
+              <input
+                type="text"
+                className="input-field"
+                placeholder="Employee number..."
+                value={searchEmployeeNumber}
+                onChange={e => setSearchEmployeeNumber(e.target.value)}
+              />
+              <select
+                className="input-field"
+                value={selectedDepartment}
+                onChange={e => setSelectedDepartment(e.target.value)}
+              >
+                <option value="">All Departments</option>
+                {departments.map(dep => (
+                  <option key={dep} value={dep}>{formatDepartmentName(dep)}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={handleSearch}
+                className="btn-primary inline-flex items-center justify-center space-x-2"
+              >
+                <MagnifyingGlassIcon className="h-4 w-4" />
+                <span>Search</span>
+              </button>
+              <button
+                onClick={handleClearSearch}
+                className="btn-secondary inline-flex items-center justify-center space-x-2"
+              >
+                <XMarkIcon className="h-4 w-4" />
+                <span>Clear</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -335,7 +382,8 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
           
           let confirmMessage = `Are you sure you want to delete ${employeeName}?`;
           if (hasSubordinates && employeeToDelete.subordinates) {
-            confirmMessage = `⚠️ Warning: ${employeeName} has ${employeeToDelete.subordinates.length} subordinate(s) reporting to them.\n\nYou must reassign or remove these employees first before deleting this manager.\n\nSubordinates:\n${employeeToDelete.subordinates.map(s => `• ${s.firstName} ${s.lastName} (${s.position})`).join('\n')}`;
+            const subordinateCount = employeeToDelete.subordinates.length;
+            confirmMessage = `Warning: ${employeeName} has ${subordinateCount} employee${subordinateCount > 1 ? 's' : ''} reporting to them.\n\nYou must reassign or remove these employees first before deleting this manager.`;
             toast.error(confirmMessage, { duration: 6000 });
             return;
           }
@@ -382,8 +430,8 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
 
       {/* Add/Edit Modals (simplified, can be expanded) */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
-          <div className="relative mx-auto p-6 border max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-lg rounded-lg bg-white">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-2 sm:p-4">
+          <div className="relative mx-auto p-4 sm:p-6 border max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-lg rounded-lg bg-white">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900">{addType === 'manager' ? 'Add New Manager' : 'Add New Employee'}</h3>
               <button
@@ -707,8 +755,8 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
       )}
 
       {showEditModal && editingEmployee && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
-          <div className="relative mx-auto p-6 border max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-lg rounded-lg bg-white">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-2 sm:p-4">
+          <div className="relative mx-auto p-4 sm:p-6 border max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-lg rounded-lg bg-white">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900">Edit Employee</h3>
               <button
