@@ -244,15 +244,20 @@ export const VirtualEmployeeTable: React.FC<VirtualEmployeeTableProps> = ({
     return (
       <button
         onClick={() => onSort?.(column)}
-        className="flex items-center space-x-1 text-left hover:text-gray-700 focus:outline-none focus:text-gray-700"
+        className="flex items-center space-x-1 text-left hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus:text-gray-700 px-2 py-1 rounded transition-colors cursor-pointer"
+        title={`Sort by ${children}`}
       >
         <span>{children}</span>
-        {isActive && (
+        {isActive ? (
           isAsc ? (
             <ChevronUpIcon className="h-4 w-4" />
           ) : (
             <ChevronDownIcon className="h-4 w-4" />
           )
+        ) : (
+          <div className="h-4 w-4 flex items-center justify-center">
+            <div className="text-gray-400 text-xs">↕</div>
+          </div>
         )}
       </button>
     );
@@ -279,20 +284,14 @@ export const VirtualEmployeeTable: React.FC<VirtualEmployeeTableProps> = ({
           <div className="flex-1">
             <SortableHeader column="firstName">Employee</SortableHeader>
           </div>
-          <div className="flex-1 px-6">
-            <SortableHeader column="position">Position</SortableHeader>
-          </div>
-          <div className="flex-1 px-6">
-            <SortableHeader column="department">Department</SortableHeader>
-          </div>
+          <div className="flex-1 px-6">Position</div>
+          <div className="flex-1 px-6">Department</div>
           {permissions.canViewSalaries && (
             <div className="flex-1 px-6">
               <SortableHeader column="salary">Salary</SortableHeader>
             </div>
           )}
-          <div className="flex-1 px-6">
-            <SortableHeader column="manager">Manager</SortableHeader>
-          </div>
+          <div className="flex-1 px-6">Manager</div>
           <div className="flex-1 px-6">
             <SortableHeader column="createdAt">Joined</SortableHeader>
           </div>
