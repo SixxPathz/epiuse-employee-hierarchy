@@ -38,8 +38,8 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
   const [selectedDepartmentForAdd, setSelectedDepartmentForAdd] = useState(''); // Track department in add form
   const [selectedManagerIdForAdd, setSelectedManagerIdForAdd] = useState(''); // Track selected manager when adding manager
   const [selectedDepartmentForEdit, setSelectedDepartmentForEdit] = useState(''); // Track department in edit form
-  const [sortBy] = useState('firstName');
-  const [sortOrder] = useState('asc');
+  const [sortBy, setSortBy] = useState('firstName');
+  const [sortOrder, setSortOrder] = useState('asc');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
@@ -177,6 +177,18 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
     setSearchEmployeeNumber('');
     setSelectedDepartment('');
     setSearchParams({});
+  };
+
+  // Handle column sorting
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      // If clicking the same column, toggle sort order
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      // If clicking a different column, set new column and default to asc
+      setSortBy(column);
+      setSortOrder('asc');
+    }
   };
 
   // Clear department filter for non-admin users
@@ -365,6 +377,9 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
       <VirtualEmployeeTable
         employees={employees}
         user={user}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSort={handleSort}
         onEdit={emp => {
           prefetchEmployee(emp.id);
           setEditingEmployee(emp);

@@ -2,12 +2,15 @@ import React, { useMemo } from 'react';
 import { Employee, User } from '../types';
 import { formatCurrency, formatDate } from '../utils/helpers';
 import { getUserPermissions } from '../utils/permissions';
-import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, TrashIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import ProfileImage from './ProfileImage';
 
 interface VirtualEmployeeTableProps {
   employees: Employee[];
   user?: User;
+  sortBy?: string;
+  sortOrder?: string;
+  onSort?: (column: string) => void;
   onEdit: (employee: Employee) => void;
   onDelete: (employeeId: string) => void;
 }
@@ -203,6 +206,9 @@ const EmployeeRow: React.FC<EmployeeRowProps> = ({
 export const VirtualEmployeeTable: React.FC<VirtualEmployeeTableProps> = ({
   employees,
   user,
+  sortBy,
+  sortOrder,
+  onSort,
   onEdit,
   onDelete,
 }) => {
@@ -230,6 +236,28 @@ export const VirtualEmployeeTable: React.FC<VirtualEmployeeTableProps> = ({
     return false; // Employees can't see any salaries
   };
 
+  // Helper function to create sortable column headers
+  const SortableHeader = ({ column, children }: { column: string; children: React.ReactNode }) => {
+    const isActive = sortBy === column;
+    const isAsc = sortOrder === 'asc';
+    
+    return (
+      <button
+        onClick={() => onSort?.(column)}
+        className="flex items-center space-x-1 text-left hover:text-gray-700 focus:outline-none focus:text-gray-700"
+      >
+        <span>{children}</span>
+        {isActive && (
+          isAsc ? (
+            <ChevronUpIcon className="h-4 w-4" />
+          ) : (
+            <ChevronDownIcon className="h-4 w-4" />
+          )
+        )}
+      </button>
+    );
+  };
+
   if (employees.length === 0) {
     return (
       <div className="card">
@@ -248,14 +276,26 @@ export const VirtualEmployeeTable: React.FC<VirtualEmployeeTableProps> = ({
       {/* Table Header - Desktop Only */}
       <div className="hidden md:block bg-gray-50 px-6 py-3 border-b border-gray-200">
         <div className="flex items-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-          <div className="flex-1">Employee</div>
-          <div className="flex-1 px-6">Position</div>
-          <div className="flex-1 px-6">Department</div>
+          <div className="flex-1">
+            <SortableHeader column="firstName">Employee</SortableHeader>
+          </div>
+          <div className="flex-1 px-6">
+            <SortableHeader column="position">Position</SortableHeader>
+          </div>
+          <div className="flex-1 px-6">
+            <SortableHeader column="department">Department</SortableHeader>
+          </div>
           {permissions.canViewSalaries && (
-            <div className="flex-1 px-6">Salary</div>
+            <div className="flex-1 px-6">
+              <SortableHeader column="salary">Salary</SortableHeader>
+            </div>
           )}
-          <div className="flex-1 px-6">Manager</div>
-          <div className="flex-1 px-6">Joined</div>
+          <div className="flex-1 px-6">
+            <SortableHeader column="manager">Manager</SortableHeader>
+          </div>
+          <div className="flex-1 px-6">
+            <SortableHeader column="createdAt">Joined</SortableHeader>
+          </div>
           <div className="flex-shrink-0 px-6">Actions</div>
         </div>
       </div>
