@@ -121,7 +121,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
   } = useForm<AddEmployeeFormData>({
     resolver: yupResolver(addEmployeeSchema),
     defaultValues: {
-      department: user?.role === 'MANAGER' ? user.employee?.department : '',
+      department: user?.role === 'MANAGER' ? normalizeDept(user.employee?.department || '') : '',
       managerId: user?.role === 'MANAGER' ? user.employee?.id : '',
     },
   });
@@ -154,7 +154,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
         email: editingEmployee.email,
         employeeNumber: editingEmployee.employeeNumber,
         position: editingEmployee.position,
-        department: editingEmployee.department,
+        department: normalizeDept(editingEmployee.department || ''),
         salary: editingEmployee.salary,
         birthDate: editingEmployee.birthDate ? new Date(editingEmployee.birthDate).toISOString().split('T')[0] : '',
         managerId: editingEmployee.managerId || '',
@@ -452,7 +452,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                   setSelectedDepartmentForAdd('');
                   setSelectedManagerIdForAdd('');
                   reset({
-                    department: user?.role === 'MANAGER' ? user.employee?.department : '',
+                    department: user?.role === 'MANAGER' ? normalizeDept(user.employee?.department || '') : '',
                     managerId: user?.role === 'MANAGER' ? user.employee?.id : '',
                   });
                 }}
@@ -833,20 +833,34 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                  <select 
-                    {...registerEdit('department')} 
-                    className={`input-field ${editErrors.department ? 'border-red-300' : ''}`}
-                    onChange={(e) => {
-                      setSelectedDepartmentForEdit(e.target.value);
-                      // Clear manager selection when department changes
-                      setValueEdit('managerId', '');
-                    }}
-                  > 
-                    <option value="">Select Department</option>
-                    {departments.map(dep => (
-                      <option key={dep} value={dep}>{formatDepartmentName(dep)}</option>
-                    ))}
-                  </select>
+                  {user?.role === 'MANAGER' ? (
+                    <>
+                      <input 
+                        {...registerEdit('department')} 
+                        type="text"
+                        className={`input-field bg-gray-100 ${editErrors.department ? 'border-red-300' : ''}`}
+                        value={formatDepartmentName(normalizeDept(editingEmployee?.department || ''))}
+                        readOnly
+                        placeholder="Department (locked for managers)"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Managers can only edit employees within their own department</p>
+                    </>
+                  ) : (
+                    <select 
+                      {...registerEdit('department')} 
+                      className={`input-field ${editErrors.department ? 'border-red-300' : ''}`}
+                      onChange={(e) => {
+                        setSelectedDepartmentForEdit(e.target.value);
+                        // Clear manager selection when department changes
+                        setValueEdit('managerId', '');
+                      }}
+                    > 
+                      <option value="">Select Department</option>
+                      {departments.map(dep => (
+                        <option key={dep} value={dep}>{formatDepartmentName(dep)}</option>
+                      ))}
+                    </select>
+                  )}
                   {editErrors.department && <p className="text-red-500 text-xs mt-1">{editErrors.department.message}</p>}
                 </div>
               </div>
