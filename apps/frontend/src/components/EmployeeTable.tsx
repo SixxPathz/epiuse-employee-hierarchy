@@ -71,9 +71,6 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
     if (user?.role === 'MANAGER' && user?.employee?.id === employee.id) {
       return false;
     }
-    if ((user?.role === 'EMPLOYEE' || user?.role === 'MANAGER') && !employee.managerId) {
-      return false;
-    }
     return true;
   });
 

@@ -94,51 +94,31 @@ router.get('/', [
         };
       }
     } else if (currentUser.role === 'EMPLOYEE') {
-      // Employees can only see department colleagues and their management chain
+      // Employees can see everyone in their department
       const currentEmployee = await prisma.user.findUnique({
         where: { id: currentUser.userId },
         include: {
           employee: {
             select: {
               id: true,
-              managerId: true
+              department: true
             }
           }
         }
       });
 
-      if (currentEmployee?.employee) {
-        // Get department colleagues (same manager)
-        const colleagues = await prisma.employee.findMany({
+      if (currentEmployee?.employee?.department) {
+        // Get all employees in the same department
+        const departmentEmployees = await prisma.employee.findMany({
           where: { 
-            managerId: currentEmployee.employee.managerId
+            department: currentEmployee.employee.department
           },
           select: { id: true }
         });
 
-        // Build management chain by traversing up the hierarchy
-        const managementChain = [];
-        let currentManagerId = currentEmployee.employee.managerId;
-        
-        while (currentManagerId) {
-          managementChain.push(currentManagerId);
-          
-          // Get the next level manager
-          const manager = await prisma.employee.findUnique({
-            where: { id: currentManagerId },
-            select: { managerId: true }
-          });
-          
-          currentManagerId = manager?.managerId || null;
-        }
-
-        // Include: themselves + department colleagues + management chain
+        // Include all employees in their department
         where.id = {
-          in: [
-            currentEmployee.employee.id,
-            ...colleagues.map(c => c.id),
-            ...managementChain
-          ]
+          in: departmentEmployees.map(emp => emp.id)
         };
       }
     }

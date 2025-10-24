@@ -3,258 +3,176 @@
   <img src="apps/frontend/public/logo.png" alt="EPI-USE Logo" width="120"/>
 </div>
 
-# EPI-USE Employee Hierarchy Platform – User Guide
+# How to Use the EPI-USE Employee Platform
 
-## Getting Started
+## Getting In
 
-### **Accessing the Application**
-1. **Open the App:** Navigate to https://epiuse-employee-hierarchy.vercel.app/
-2. **Login:** Enter your email and password credentials
+Just go to https://epiuse-employee-hierarchy.vercel.app/ and log in with your email and password. Pretty straightforward.
 
-### **Demo Login Accounts**
-- **Admin/CEO:**
-  - Email: `thabo.mthembu@epiuse.com`
-  - Password: `securepassword123`
+If you want to try it out, I've set up some demo accounts:
 
-- **Manager:**
-  - Email: `sipho.ngcobo@epiuse.com`
-  - Password: `securepassword123`
+**Admin/CEO (can do everything):**
+- Email: `thabo.mthembu@epiuse.com`
+- Password: `securepassword123`
 
-- **Employee:**
-  - Email: `kagiso.morake@epiuse.com`
-  - Password: `securepassword123`
+**Manager (can manage their team):**
+- Email: `sipho.ngcobo@epiuse.com`  
+- Password: `securepassword123`
 
-### **Password Reset**
-- Click "Forgot Password" on the login screen
-- Enter your email address to receive a reset link
-- Check your email and follow the secure reset process
+**Employee (can view stuff and update their profile):**
+- Email: `kagiso.morake@epiuse.com`
+- Password: `securepassword123`
+
+**Forgot your password?** Click "Forgot Password" on the login screen and you'll get an email with a reset link. The usual drill.
 
 ---
 
-## Dashboard Overview
+## What You'll See When You Log In
 
-The dashboard provides role-specific insights and quick access to key features:
+The dashboard shows different stuff depending on who you are:
 
-### **Admin Dashboard**
-- **Organizational Metrics**: Total employees, department distribution, management ratios
-- **Quick Actions**: Add employees, create managers, export data
-- **System Overview**: Company-wide statistics and trends
+**If you're an Admin/CEO:**
+You get the full picture - total employees, how departments are distributed, who's managing who. Plus quick buttons to add people, create managers, and export data when you need it.
 
-**Screenshot Placeholder:** *Admin dashboard showing organizational metrics cards, department distribution chart, and quick action buttons*
+**Screenshot needed:** Show the admin dashboard with the organizational metrics cards, department distribution chart, and quick action buttons.
 
-### **Manager Dashboard**
-- **Team Metrics**: Direct reports, indirect reports, total team size
-- **Department Analytics**: Team performance and organizational structure
-- **Management Tools**: Quick access to add employees and sub-managers
+**If you're a Manager:**
+You'll see your team stats - how many people report to you directly, how many report to your direct reports (indirect), and your total team size. There are also quick buttons to add employees or sub-managers to your team.
 
-**Screenshot Placeholder:** *Manager dashboard displaying team metrics, direct/indirect reports count, and management action buttons*
+**Screenshot needed:** Show the manager dashboard displaying team metrics, direct/indirect reports count, and management action buttons.
 
-### **Employee Dashboard**
-- **Personal Overview**: Your profile information and team connections
-- **Organizational View**: Company structure and colleague directory
-- **Profile Management**: Update personal information and settings
+**If you're an Employee:**
+You get a nice overview of your profile info and can see the company structure. You can update your own details and browse the colleague directory to see who's who.
 
-**Screenshot Placeholder:** *Employee dashboard with personal profile summary and team directory access*
+**Screenshot needed:** Show the employee dashboard with personal profile summary and team directory access.
 
 ---
 
-## Employee Management
+## Managing People
 
-### **Viewing Employees**
-- **Search & Filter**: Multi-criteria search by name, employee number, department
-- **Sorting Options**: Sort by any column (name, position, salary, etc.)
-- **Role-Based Visibility**: See employees based on your access level
-- **Pagination**: Navigate through large employee lists efficiently
+### **Finding and Viewing Employees**
 
-**Screenshot Placeholder:** *Employee table showing search filters, sortable columns, and pagination controls*
+The employee table is pretty flexible - you can search by name, employee number, or department. Click any column header to sort by that field. You'll only see employees you're allowed to see based on your role, and if there are tons of people, it'll paginate so it doesn't get overwhelming.
 
-### **Adding Employees** *(Admin & Manager)*
+**Screenshot needed:** Show the employee table with search filters active, sortable column headers, and pagination controls visible.
 
-#### **For Administrators:**
-1. Click "Add Employee" button
-2. Fill in employee details (name, email, employee number, position, salary, birth date)
-3. **Select Department**: Choose from existing departments
-4. **Assign Manager**: Select from available managers in the chosen department
-5. Submit to create the employee
+### **Adding New Employees**
 
-**Screenshot Placeholder:** *Admin add employee form showing all fields including department selection and manager assignment dropdown*
+**If you're an Admin:**
+Hit the "Add Employee" button and fill in all the details - name, email, employee number, position, salary, birth date. You can pick any department and assign them to any manager in that department. Pretty straightforward.
 
-#### **For Managers:**
-1. Click "Add Employee" button
-2. Fill in employee details
-3. **Department**: Auto-filled with your department (locked)
-4. **Manager Selection**: Choose to assign the employee to:
-   - **Yourself** (default option)
-   - **Other managers** in your department
-5. Submit to create the employee
+**Screenshot needed:** Show the admin add employee form with all fields visible, including department selection and manager assignment dropdown.
 
-**Screenshot Placeholder:** *Manager add employee form with department field locked and manager selection dropdown showing "You" and other department managers*
+**If you're a Manager:**
+Same deal, but your department is already filled in (and locked - you can't assign people to other departments). The cool thing is you can assign the new employee to yourself OR to other managers in your department. This is handy when you're organizing your team structure.
 
-### **Adding Managers/Sub-Managers**
+**Screenshot needed:** Show the manager add employee form with department field locked and manager selection dropdown showing "You" and other department managers.
 
-#### **For Administrators:**
-1. Click "Add Manager" button
-2. Fill in manager details
-3. **Reports To**: Select who this manager reports to:
-   - **CEO**: Creates a department head
-   - **Other Manager**: Creates a sub-manager
-4. **Department**: Auto-fills based on supervisor selection
+### **Adding Managers**
 
-**Screenshot Placeholder:** *Admin add manager form with "Reports To" dropdown showing CEO and other manager options*
+**If you're an Admin:**
+Click "Add Manager" and fill in their details. You get to pick who they report to - if you select the CEO, they become a department head. If you pick another manager, they become a sub-manager under that person. The department field fills in automatically based on who you pick as their supervisor.
 
-#### **For Managers:**
-1. Click "Add Sub-Manager" button
-2. Fill in sub-manager details
-3. **Department**: Auto-filled and locked to your department
-4. **Reports To**: Automatically set to you
-5. Sub-manager will have management privileges within your department
+**Screenshot needed:** Show the admin add manager form with "Reports To" dropdown showing CEO and other manager options.
 
-**Screenshot Placeholder:** *Manager add sub-manager form with department field locked and informational message about reporting structure*
+**If you're a Manager:**
+You can add sub-managers under yourself by clicking "Add Sub-Manager". Their department is locked to yours (obviously), and they'll report to you. They'll get management privileges within your department, which is useful for bigger teams.
 
-### **Editing Employees**
-- Click the edit icon next to any employee you have permission to modify
-- **Manager Reassignment**: Managers can now reassign employees to other managers within their department
-- Update any field including salary, position, department, and manager assignment
-- Changes are validated and saved immediately
+**Screenshot needed:** Show the manager add sub-manager form with department field locked and informational message about reporting structure.
 
-**Screenshot Placeholder:** *Edit employee modal showing all editable fields with manager reassignment dropdown for managers*
+### **Editing People**
 
-### **Deleting Employees**
-- Click the delete icon (if you have permission)
-- **Protection**: Cannot delete managers who have subordinates
-- **CEO Protection**: Cannot delete the only CEO in the organization
-- Confirmation required before permanent deletion
+Click the edit icon next to anyone you're allowed to modify. The neat thing is that managers can now reassign employees to other managers within their department - so if you need to reorganize your team, you can do it without bothering an admin. Just update whatever needs changing and hit save.
+
+**Screenshot needed:** Show the edit employee modal with all editable fields and the manager reassignment dropdown for managers.
+
+### **Deleting People**
+
+Click the delete icon if you have permission. The system won't let you delete managers who still have people reporting to them (you'd have to reassign those people first). Also can't delete the CEO if they're the only one - that would break everything. You'll get a confirmation dialog before anything gets permanently deleted.
 
 ---
 
-## Organization Chart
+## The Org Chart
 
-### **Interactive Hierarchy View**
-- **Visual Tree**: Complete organizational structure displayed as an interactive tree
-- **Node Details**: Click any employee node to view detailed information
-- **Navigation**: Zoom, pan, and navigate through large organizational structures
-- **Real-time Updates**: Chart reflects current organizational structure
+This is probably my favorite part - you get a visual tree of the whole company structure. Click on anyone to see their details, and you can zoom and pan around if the organization is huge. It updates in real-time, so if someone gets promoted or moved around, you'll see it immediately.
 
-**Screenshot Placeholder:** *Interactive organization chart showing hierarchical tree structure with CEO at top and departments branching below*
+**Screenshot needed:** Show the interactive organization chart with the hierarchical tree structure, CEO at top, and departments branching below.
 
-### **Features**
-- **Unlimited Depth**: Supports complex multi-level hierarchies
-- **Department Grouping**: Visual indication of departmental boundaries
-- **Role Indicators**: Different visual styles for Admins, Managers, and Employees
+The chart can handle however many levels of hierarchy you throw at it, and it visually groups departments so you can see how everything fits together. Different roles (admins, managers, employees) have different visual styles so you can tell who's who at a glance.
 
-**Screenshot Placeholder:** *Close-up view of org chart nodes showing different visual styles for different roles and clickable employee details*
+**Screenshot needed:** Show a close-up view of org chart nodes with different visual styles for different roles and clickable employee details.
 
 ---
 
-## Profile Management
+## Your Profile
 
-### **Personal Profile**
-- **View Information**: See your complete employee profile
-- **Edit Details**: Update personal information (name, contact details)
-- **Profile Picture**: 
-  - **Gravatar**: Automatic avatar based on email address
-  - **Custom Upload**: Upload your own profile picture
-  - **Remove Picture**: Revert to Gravatar default
+### **Personal Stuff**
 
-**Screenshot Placeholder:** *Profile page showing user information, profile picture options, and edit profile form*
+You can view and edit your profile information - name, contact details, all that. For your profile picture, it automatically pulls from Gravatar based on your email, but you can also upload your own picture if you want. If you upload something and later decide you don't like it, you can remove it and go back to the Gravatar default.
 
-### **Password Management**
-- **Change Password**: Update your login password securely
-- **Security Requirements**: Minimum 6 characters with validation
-- **Forced Changes**: New users must change default passwords
+**Screenshot needed:** Show the profile page with user information, profile picture options, and edit profile form.
 
-**Screenshot Placeholder:** *Password change modal with current password, new password, and confirm password fields*
+### **Password Changes**
+
+You can change your password anytime from the profile page. Minimum 6 characters (I kept it simple). If you're a new user with a default password, the system will make you change it before you can do anything else - basic security stuff.
+
+**Screenshot needed:** Show the password change modal with current password, new password, and confirm password fields.
 
 ---
 
 ## Data Export *(Admin & Manager)*
 
-### **Export Options**
-- **CSV Format**: Spreadsheet-compatible employee data
-- **JSON Format**: Structured data for system integration
-- **Filtered Exports**: Export based on current search/filter criteria
+If you need to get employee data out of the system (for reports, backups, whatever), you can export it as CSV or JSON. CSV works great for spreadsheets, JSON is better if you're feeding it into another system. You can export based on whatever filters you've applied, so if you've searched for specific people, it'll only export those.
 
-**Screenshot Placeholder:** *Data export page showing format selection (CSV/JSON) and export button with preview of data to be exported*
+**Screenshot needed:** Show the employee table with some filters applied, then the export dropdown menu with CSV/JSON options visible.
 
-### **Available Data**
-- **Admin**: Full access to all employee data including salaries
-- **Manager**: Team data within their departmental hierarchy
-- **Security**: Sensitive data filtered based on permissions
+Admins get everything including salaries, managers only get data for their teams. The system automatically filters out sensitive stuff based on your permissions, so you don't have to worry about accidentally seeing things you shouldn't.
 
 ---
 
 ## Settings *(Admin Only)*
 
-### **System Configuration**
-- **Company Information**: Update organizational details
-- **User Management**: Manage system-wide user settings
-- **Security Settings**: Configure authentication and access controls
+If you're an admin, you get a settings page where you can update company info, manage users, and configure security stuff. Most people won't need this, but it's there if you're running the show.
 
-**Screenshot Placeholder:** *Settings page showing company information form, user management options, and security configuration panels*
+**Screenshot needed:** Show the admin settings page with the different configuration sections visible.
 
 ---
 
-## Role-Based Features
+## What You Can Do Based on Your Role
 
-### **Admin (CEO/System Administrator)**
-- **Full System Access**: Manage entire organization
-- **Cross-Department Operations**: Create, edit, delete employees anywhere
-- **Manager Assignment**: Create department heads and assign reporting structures
-- **Data Export**: Full organizational data in CSV/JSON formats
-- **Salary Visibility**: View all employee salaries and compensation
-- **System Settings**: Access to configuration and administrative tools
-- **Flexible Assignment**: Assign employees to any manager in selected departments
+### **If You're an Admin/CEO**
+You basically run the show - you can manage the entire organization, create/edit/delete employees anywhere, set up department heads and reporting structures. You get to see everyone's salaries, export all the data, and access the system settings. You can also assign employees to any manager in any department.
 
-### **Manager (Department Heads/Team Leads)**
-- **Department Management**: Full control within your department
-- **Flexible Employee Assignment**: Assign employees to yourself OR other managers in your department
-- **Sub-Manager Creation**: Create and manage sub-managers under your supervision
-- **Team Analytics**: View comprehensive team metrics and performance data
-- **Employee Editing**: Update information for all employees in your hierarchy
-- **Manager Reassignment**: Reassign employees between managers within your department
-- **Team Data Export**: Export data for your team and subordinates
-- **Salary Access**: View salaries for your direct and indirect reports
+**Screenshot needed:** Show the admin dashboard with all the management buttons and full access indicators visible.
 
-### **Employee (Standard Users)**
-- **Profile Management**: Update your personal information and password
-- **Organizational View**: Access to company org chart and colleague directory
-- **Team Directory**: View information about colleagues and team members
-- **Limited Access**: View public information while maintaining privacy
+### **If You're a Manager**
+You get full control within your department. The cool part is you can assign employees to yourself OR other managers in your department - gives you flexibility in organizing your team. You can create sub-managers, see comprehensive team metrics, and reassign people between managers in your department without bothering an admin. You can also export your team's data and see salaries for everyone who reports to you (directly or indirectly).
+
+**Screenshot needed:** Show the manager dashboard highlighting the team metrics and the flexible assignment options in the add/edit employee forms.
+
+### **If You're an Employee**
+You can update your own profile and password, browse the org chart to see how the company is structured, and view the colleague directory. You can see public info about your teammates but can't mess with anything important - which is probably for the best.
+
+**Screenshot needed:** Show the employee dashboard with the limited but useful options available.
 
 ---
 
-## Latest Features
+## Some Tips That Might Help
 
-### **Enhanced Manager Assignment System**
-- **Intra-Department Flexibility**: Managers can assign employees to other managers within their department
-- **Visual Indicators**: Clear "(You)" labels and helpful text guide assignment decisions
-- **Smart Validation**: System prevents invalid cross-department assignments
-- **Improved UX**: Dropdown selections with contextual information
+1. **Search like a pro:** You can combine different filters - search for a name while filtering by department to find people quickly.
 
-### **Advanced Department Management**
-- **Auto-Population**: Department fields intelligently fill based on context
-- **Locked Fields**: Appropriate fields are locked to prevent invalid changes
-- **Visual Feedback**: Clear indicators show departmental relationships
+2. **Use that flexible manager assignment:** If you're a manager, take advantage of being able to assign people to other managers in your department. Makes reorganizing teams way easier.
 
-### **Enhanced Security**
-- **Department Boundaries**: Strict enforcement of departmental access controls
-- **Role Validation**: Backend validation ensures proper permission enforcement
-- **Audit Trail**: Complete tracking of organizational changes
+3. **Keep your profile updated:** Other people can see your info, so keep it current. Plus it helps with team communication.
+
+4. **Play around with the org chart:** It's interactive for a reason - zoom in, click on people, see how everything connects. It's actually pretty useful for understanding who does what.
+
+5. **Export data when you need it:** If you're a manager or admin, don't forget you can export team data for reports or backups. Comes in handy.
+
+6. **Log out when you're done:** Hit "Sign Out" in the nav menu when you're finished. Basic security stuff, but worth mentioning.
 
 ---
 
-## Logout
+That's pretty much everything you need to know. The system is designed to be straightforward, so most things should be intuitive once you start using it. If something doesn't make sense, it's probably a bug - let me know!
 
-Click the "Sign Out" button in the navigation menu to securely log out of the application.
 
----
-
-## Tips for Success
-
-1. **Use Search Effectively**: Combine name, employee number, and department filters for precise results
-2. **Leverage Manager Assignment**: Take advantage of flexible assignment options for better team organization
-3. **Regular Profile Updates**: Keep your profile information current for better team communication
-4. **Explore the Org Chart**: Use the interactive chart to understand organizational relationships
-5. **Export Data Regularly**: Managers and admins should export team data for backup and analysis
-
----
