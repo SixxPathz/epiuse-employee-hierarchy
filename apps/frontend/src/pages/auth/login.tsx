@@ -43,9 +43,11 @@ export default function Login() {
         const userName = result.user.employee ? `${result.user.employee.firstName} ${result.user.employee.lastName}` : result.user.email;
         toast.success(`✅ Welcome back, ${userName}!`, { duration: 3000 });
         
-        // Redirect based on role
-        const redirectPath = result.user.role === 'ADMIN' ? '/dashboard' : '/employees';
-        router.push(redirectPath);
+        // Clear any previous navigation history to prevent going back to previous user's page
+        window.history.replaceState(null, '', window.location.href);
+        
+        // Always redirect to dashboard first, let dashboard handle password change prompt
+        router.replace('/dashboard');
       }
     } catch (error: any) {
       console.error('Login error:', error);

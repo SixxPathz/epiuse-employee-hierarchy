@@ -203,7 +203,7 @@ export default function PasswordChangeModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors flex items-center justify-center"
               >
                 Cancel
               </button>
@@ -211,7 +211,7 @@ export default function PasswordChangeModal({
             <button
               type="submit"
               disabled={changePasswordMutation.isPending}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
             >
               {changePasswordMutation.isPending ? 'Changing...' : 'Change Password'}
             </button>
