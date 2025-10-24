@@ -560,13 +560,16 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
                   {addType === 'manager' && user?.role === 'MANAGER' ? (
-                    <input 
-                      type="text" 
-                      className="input-field bg-gray-100" 
-                      value={formatDepartmentName(normalizeDept(user.employee?.department || ''))} 
-                      disabled 
-                      {...register('department')} 
-                    />
+                    <>
+                      <input 
+                        type="text" 
+                        className="input-field bg-gray-100" 
+                        value={formatDepartmentName(normalizeDept(user.employee?.department || ''))} 
+                        disabled 
+                        readOnly
+                      />
+                      <input type="hidden" {...register('department')} />
+                    </>
                   ) : addType === 'manager' && user?.role === 'ADMIN' && selectedManagerIdForAdd && selectedManagerIdForAdd === ceoEmployee?.id ? (
                     // CEO selected - allow new department
                     <>
@@ -579,13 +582,16 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                     </>
                   ) : addType === 'manager' && user?.role === 'ADMIN' && selectedManagerIdForAdd && selectedManagerIdForAdd !== ceoEmployee?.id ? (
                     // Other manager selected - prefill their department
-                    <input 
-                      type="text" 
-                      className="input-field bg-gray-100" 
-                      value={formatDepartmentName(normalizeDept((managersData?.employees || []).find((m: Employee) => m.id === selectedManagerIdForAdd)?.department || ''))} 
-                      disabled 
-                      {...register('department')} 
-                    />
+                    <>
+                      <input 
+                        type="text" 
+                        className="input-field bg-gray-100" 
+                        value={formatDepartmentName(normalizeDept((managersData?.employees || []).find((m: Employee) => m.id === selectedManagerIdForAdd)?.department || ''))} 
+                        disabled 
+                        readOnly
+                      />
+                      <input type="hidden" {...register('department')} />
+                    </>
                   ) : addType === 'manager' && user?.role === 'ADMIN' && !selectedManagerIdForAdd ? (
                     // No manager selected yet for new manager
                     <>
@@ -597,7 +603,16 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                       ) : null}
                     </>
                   ) : user?.role === 'MANAGER' ? (
-                    <input type="text" className="input-field bg-gray-100" value={formatDepartmentName(normalizeDept(user.employee?.department || ''))} disabled {...register('department')} />
+                    <>
+                      <input 
+                        type="text" 
+                        className="input-field bg-gray-100" 
+                        value={formatDepartmentName(normalizeDept(user.employee?.department || ''))} 
+                        disabled 
+                        readOnly
+                      />
+                      <input type="hidden" {...register('department')} />
+                    </>
                   ) : (
                     <select {...register('department', {
                       setValueAs: v => normalizeDept(v),
@@ -835,14 +850,16 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
                   {user?.role === 'MANAGER' ? (
                     <>
-                      <input 
-                        {...registerEdit('department')} 
-                        type="text"
-                        className={`input-field bg-gray-100 ${editErrors.department ? 'border-red-300' : ''}`}
-                        value={formatDepartmentName(normalizeDept(editingEmployee?.department || ''))}
-                        readOnly
-                        placeholder="Department (locked for managers)"
-                      />
+                      <>
+                        <input 
+                          type="text"
+                          className={`input-field bg-gray-100 ${editErrors.department ? 'border-red-300' : ''}`}
+                          value={formatDepartmentName(normalizeDept(editingEmployee?.department || ''))}
+                          readOnly
+                          placeholder="Department (locked for managers)"
+                        />
+                        <input type="hidden" {...registerEdit('department')} />
+                      </>
                       <p className="text-xs text-gray-500 mt-1">Managers can only edit employees within their own department</p>
                     </>
                   ) : (
