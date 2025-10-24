@@ -292,23 +292,21 @@ export default function DashboardStats({ user }: DashboardStatsProps) {
           
           <div className="card">
             <div className="card-header">
-              <h3 className="text-lg font-semibold text-gray-900">Team Summary</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Indirect Reports ({indirectReports.length})</h3>
             </div>
-            <div className="card-body">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Direct Reports</span>
-                  <span className="text-lg font-semibold text-company-navy">{directReports.length}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Indirect Reports</span>
-                  <span className="text-lg font-semibold text-company-navy">{indirectReports.length}</span>
-                </div>
-                <div className="border-t pt-2 flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">Total Team Size</span>
-                  <span className="text-xl font-bold text-company-red">{totalTeamSize}</span>
-                </div>
-              </div>
+            <div className="card-body max-h-64 overflow-y-auto">
+              {indirectReports.length > 0 ? (
+                <ul className="space-y-2">
+                  {indirectReports.map((emp: any) => (
+                    <li key={emp.id} className="flex items-center justify-between py-1">
+                      <span className="text-sm font-medium">{emp.firstName} {emp.lastName}</span>
+                      <span className="text-xs text-gray-500">{emp.position}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-gray-500 text-sm">No indirect reports</div>
+              )}
             </div>
           </div>
         </div>
