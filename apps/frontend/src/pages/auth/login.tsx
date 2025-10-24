@@ -41,25 +41,25 @@ export default function Login() {
 
       if (result.user) {
         const userName = result.user.employee ? `${result.user.employee.firstName} ${result.user.employee.lastName}` : result.user.email;
-        toast.success(`✅ Welcome back, ${userName}!`, { duration: 3000 });
+        toast.success(`Welcome back, ${userName}!`, { duration: 3000 });
         
-        // Clear any previous navigation history to prevent going back to previous user's page
+        // This prevents users from hitting back button and seeing previous user's data
         window.history.replaceState(null, '', window.location.href);
         
-        // Always redirect to dashboard first, let dashboard handle password change prompt
+        // Dashboard checks if password needs changing and shows modal if required
         router.replace('/dashboard');
       }
     } catch (error: any) {
       console.error('Login error:', error);
       const errorMessage = error.response?.data?.error || error.message;
       if (errorMessage?.includes('Invalid') || errorMessage?.includes('credentials')) {
-        toast.error('❌ Login failed: Incorrect email or password. Please try again.', { duration: 5000 });
+        toast.error('Login failed: Incorrect email or password. Please try again.', { duration: 5000 });
       } else if (errorMessage?.includes('not found')) {
-        toast.error('❌ Account not found: This email is not registered in our system.', { duration: 5000 });
+        toast.error('Account not found: This email is not registered in our system.', { duration: 5000 });
       } else if (errorMessage?.includes('locked') || errorMessage?.includes('disabled')) {
-        toast.error('⚠️ Account locked: Please contact your administrator for assistance.', { duration: 6000 });
+        toast.error('Account locked: Please contact your administrator for assistance.', { duration: 6000 });
       } else {
-        toast.error(`❌ Login failed: ${errorMessage || 'Please check your credentials and try again.'}`, { duration: 5000 });
+        toast.error(`Login failed: ${errorMessage || 'Please check your credentials and try again.'}`, { duration: 5000 });
       }
     }
   };

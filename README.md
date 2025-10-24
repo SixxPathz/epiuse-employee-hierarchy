@@ -1,8 +1,9 @@
-
-# EPI-USE Employee Hierarchy Platform
 <div align="center">
   <img src="apps/frontend/public/logo.png" alt="EPI-USE Logo" width="120"/>
 </div>
+
+# EPI-USE Employee Hierarchy Platform
+
 ## Overview
 
 This is a cloud-hosted web application built to manage EPI-USE Africa's employee hierarchy. It handles employee data, reporting relationships, and provides different access levels based on user roles.
@@ -11,7 +12,6 @@ This is a cloud-hosted web application built to manage EPI-USE Africa's employee
 
 ## What I Built
 
-I built everything that was asked for and then some:
 
 **Employee Management**
 - Full CRUD - you can add, view, edit, and delete employees
@@ -40,7 +40,6 @@ I built everything that was asked for and then some:
 
 ## Extra Stuff I Added
 
-I got a bit carried away and built more than what was asked for:
 
 **Better Security**
 - Different permission levels - admins can do everything, managers can only mess with their department, employees can just view stuff
@@ -187,4 +186,4 @@ This setup gives good performance, automatic scaling, and minimal operational ov
 
 ---
 
-For end-user instructions, see the [User Guide](USER_GUIDE.md).
+For end-user instructions, see the [User Guide](USER_GUIDE.pdf).

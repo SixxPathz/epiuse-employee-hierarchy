@@ -136,15 +136,15 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
     resolver: yupResolver(addEmployeeSchema),
   });
 
-  // Helper function to format department names for display
+  // Convert department slugs like 'human-resources' to 'Human Resources'
+  // I use this everywhere to make department names readable for users
   const formatDepartmentName = (dept: string): string => {
-    // Display normalized department names in readable format
     return dept
       .replace(/-/g, ' ')
       .replace(/\b\w/g, c => c.toUpperCase());
   };
 
-  // Effect to prepopulate edit form when editingEmployee changes
+  // When user clicks edit, populate the form with current employee data
   useEffect(() => {
     if (editingEmployee && showEditModal) {
       setSelectedDepartmentForEdit(editingEmployee.department || '');
@@ -162,7 +162,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
     }
   }, [editingEmployee, showEditModal, resetEdit]);
 
-  // Handle search button click
+  // Build search parameters and trigger employee fetch with filters
   const handleSearch = () => {
     setSearchParams({
       name: searchName || undefined,
@@ -171,7 +171,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
     });
   };
 
-  // Clear search function
+  // Reset all search filters and go back to showing everyone
   const handleClearSearch = () => {
     setSearchName('');
     setSearchEmployeeNumber('');
@@ -179,7 +179,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
     setSearchParams({});
   };
 
-  // Handle column sorting
+  // Toggle between ascending/descending when clicking column headers
   const handleSort = (column: string) => {
     if (sortBy === column) {
       // If clicking the same column, toggle sort order
@@ -191,7 +191,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
     }
   };
 
-  // Clear department filter for non-admin users
+  // Managers and employees shouldn't see department filter - only admins can filter by department
   useEffect(() => {
     if (user?.role !== 'ADMIN' && selectedDepartment) {
       setSelectedDepartment('');
@@ -484,7 +484,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                 }
               }
               
-              // If adding an employee, handle managerId assignment
+              // Different logic for managers vs admins when assigning new employees to managers
               if (addType === 'employee') {
                 let dept = normalizeDept(payload.department);
                 if (user?.role === 'MANAGER' && user.employee?.id) {
@@ -500,7 +500,7 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
                     payload.managerId = deptManager.id;
                   }
                 }
-                // Prevent adding employee if no manager exists for department
+                // Can't add employees to departments without managers - business rule I enforce
                 if (!payload.managerId) {
                   toast.error(`Cannot add employee to ${formatDepartmentName(dept)}: No manager exists in this department. Please add a manager first.`, { duration: 5000 });
                   return;
@@ -510,20 +510,20 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
               addEmployeeMutation.mutateAsync(payload).then(() => {
                 const name = `${data.firstName} ${data.lastName}`;
                 if (addType === 'manager') {
-                  toast.success(`✅ ${name} has been added as a ${data.position} in the ${formatDepartmentName(data.department)} department.`, { duration: 4000 });
+                  toast.success(`${name} has been added as a ${data.position} in the ${formatDepartmentName(data.department)} department.`, { duration: 4000 });
                 } else {
-                  toast.success(`✅ ${name} has been successfully added to your team.`, { duration: 4000 });
+                  toast.success(`${name} has been successfully added to your team.`, { duration: 4000 });
                 }
                 setShowAddModal(false);
                 reset();
               }).catch(err => {
                 const errorMessage = err?.response?.data?.error || err?.message;
                 if (errorMessage?.includes('already exists') || errorMessage?.includes('duplicate')) {
-                  toast.error(`⚠️ Cannot add employee: This email or employee number is already in use. Please use a different one.`, { duration: 5000 });
+                  toast.error(`Cannot add employee: This email or employee number is already in use. Please use a different one.`, { duration: 5000 });
                 } else if (errorMessage?.includes('validation')) {
-                  toast.error(`⚠️ Invalid data: Please check all fields and try again. ${errorMessage}`, { duration: 5000 });
+                  toast.error(`Invalid data: Please check all fields and try again. ${errorMessage}`, { duration: 5000 });
                 } else {
-                  toast.error(`❌ Failed to add ${data.firstName} ${data.lastName}: ${errorMessage || 'Please try again.'}`, { duration: 5000 });
+                  toast.error(`Failed to add ${data.firstName} ${data.lastName}: ${errorMessage || 'Please try again.'}`, { duration: 5000 });
                 }
               });
             })} className="space-y-4">
@@ -786,18 +786,18 @@ export default function EmployeeTable({ user }: EmployeeTableProps) {
             <form onSubmit={handleSubmitEdit(data => {
               const employeeName = `${editingEmployee.firstName} ${editingEmployee.lastName}`;
               updateEmployeeMutation.mutateAsync({ ...data, id: editingEmployee.id }).then(() => {
-                toast.success(`✅ ${data.firstName} ${data.lastName}'s information has been successfully updated.`, { duration: 4000 });
+                toast.success(`${data.firstName} ${data.lastName}'s information has been successfully updated.`, { duration: 4000 });
                 setShowEditModal(false);
                 setEditingEmployee(null);
                 resetEdit();
               }).catch(err => {
                 const errorMessage = err?.response?.data?.error || err?.message;
                 if (errorMessage?.includes('already exists') || errorMessage?.includes('duplicate')) {
-                  toast.error(`⚠️ Cannot update ${employeeName}: This email or employee number is already in use by another employee.`, { duration: 5000 });
+                  toast.error(`Cannot update ${employeeName}: This email or employee number is already in use by another employee.`, { duration: 5000 });
                 } else if (errorMessage?.includes('not found')) {
-                  toast.error(`⚠️ Employee not found: ${employeeName} may have been deleted. Please refresh the page.`, { duration: 5000 });
+                  toast.error(`Employee not found: ${employeeName} may have been deleted. Please refresh the page.`, { duration: 5000 });
                 } else {
-                  toast.error(`❌ Failed to update ${employeeName}: ${errorMessage || 'Please try again.'}`, { duration: 5000 });
+                  toast.error(`Failed to update ${employeeName}: ${errorMessage || 'Please try again.'}`, { duration: 5000 });
                 }
               });
             })} className="space-y-4">

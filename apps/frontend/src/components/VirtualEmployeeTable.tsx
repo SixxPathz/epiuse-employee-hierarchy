@@ -222,21 +222,21 @@ export const VirtualEmployeeTable: React.FC<VirtualEmployeeTableProps> = ({
       .join(' ');
   };
 
-  // Helper function to determine if current user can view specific employee's salary
+  // Salary visibility rules: Admins see all, managers see their team, employees see nothing
   const canViewEmployeeSalary = (employee: Employee) => {
     if (!permissions.canViewSalaries) return false;
     if (user?.role === 'ADMIN') return true;
     
     if (user?.role === 'MANAGER') {
-      // Backend already filters salary data correctly for managers
-      // If the employee has a salary field, it means the backend determined we can see it
+      // I trust the backend to only send salary data for employees managers should see
+      // This keeps the logic simple on the frontend
       return employee.salary !== null && employee.salary !== undefined;
     }
     
-    return false; // Employees can't see any salaries
+    return false; // Regular employees never see salary info - company policy
   };
 
-  // Helper function to create sortable column headers
+  // Creates clickable column headers with up/down arrows to show sort direction
   const SortableHeader = ({ column, children }: { column: string; children: React.ReactNode }) => {
     const isActive = sortBy === column;
     const isAsc = sortOrder === 'asc';

@@ -37,7 +37,7 @@ export default function ResetPassword() {
   });
 
   useEffect(() => {
-    // Get token from URL query params
+    // Extract the reset token from the URL - this comes from the email link
     if (router.isReady) {
       const { token: urlToken } = router.query;
       if (urlToken && typeof urlToken === 'string') {

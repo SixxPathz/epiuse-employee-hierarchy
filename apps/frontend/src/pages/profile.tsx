@@ -120,7 +120,7 @@ export default function ProfilePage() {
 
   const onSubmitProfile = async (data: ProfileFormDataAdmin) => {
     if (!user?.employee || !canEditProfile) {
-      toast.error('⚠️ Access denied: Only administrators can edit profile information.', { duration: 4000 });
+      toast.error('Access denied: Only administrators can edit profile information.', { duration: 4000 });
       return;
     }
     
@@ -151,16 +151,16 @@ export default function ProfilePage() {
       setUser(updatedUser);
       window.dispatchEvent(new CustomEvent('userProfileUpdated', { detail: updatedUser }));
       
-      toast.success(`✅ Your profile has been successfully updated, ${data.firstName}!`, { duration: 4000 });
+      toast.success(`Your profile has been successfully updated, ${data.firstName}!`, { duration: 4000 });
     } catch (error: any) {
       console.error('Profile update error:', error);
       const errorMessage = error.response?.data?.error || error.message;
       if (errorMessage?.includes('already exists') || errorMessage?.includes('duplicate')) {
-        toast.error('⚠️ Cannot update profile: This email is already in use by another user.', { duration: 5000 });
+        toast.error('Cannot update profile: This email is already in use by another user.', { duration: 5000 });
       } else if (errorMessage?.includes('validation')) {
-        toast.error(`⚠️ Invalid data: Please check all fields. ${errorMessage}`, { duration: 5000 });
+        toast.error(`Invalid data: Please check all fields. ${errorMessage}`, { duration: 5000 });
       } else {
-        toast.error(`❌ Failed to update profile: ${errorMessage || 'Please try again.'}`, { duration: 5000 });
+        toast.error(`Failed to update profile: ${errorMessage || 'Please try again.'}`, { duration: 5000 });
       }
     } finally {
       setIsUpdatingProfile(false);
@@ -175,17 +175,17 @@ export default function ProfilePage() {
         newPassword: data.newPassword,
       });
 
-      toast.success('✅ Your password has been successfully changed. Please use your new password on next login.', { duration: 5000 });
+      toast.success('Your password has been successfully changed. Please use your new password on next login.', { duration: 5000 });
       resetPassword();
     } catch (error: any) {
       console.error('Password change error:', error);
       const errorMessage = error.response?.data?.error || error.message;
       if (errorMessage?.includes('current password') || errorMessage?.includes('incorrect')) {
-        toast.error('❌ Incorrect current password: Please enter your correct current password.', { duration: 5000 });
+        toast.error('Incorrect current password: Please enter your correct current password.', { duration: 5000 });
       } else if (errorMessage?.includes('weak') || errorMessage?.includes('requirements')) {
-        toast.error('⚠️ Weak password: Password must be at least 8 characters with uppercase, lowercase, and numbers.', { duration: 6000 });
+        toast.error('Weak password: Password must be at least 8 characters with uppercase, lowercase, and numbers.', { duration: 6000 });
       } else {
-        toast.error(`❌ Failed to change password: ${errorMessage || 'Please try again.'}`, { duration: 5000 });
+        toast.error(`Failed to change password: ${errorMessage || 'Please try again.'}`, { duration: 5000 });
       }
     } finally {
       setIsChangingPassword(false);
