@@ -107,6 +107,39 @@ export default function OrganizationChart() {
     }
   };
 
+  // Dynamic color system for unlimited hierarchy levels
+  const getLevelColors = (level: number) => {
+    const colorSets = [
+      { bar: 'bg-blue-400', badge: 'bg-blue-100 text-blue-800' },
+      { bar: 'bg-indigo-400', badge: 'bg-indigo-100 text-indigo-800' },
+      { bar: 'bg-purple-400', badge: 'bg-purple-100 text-purple-800' },
+      { bar: 'bg-pink-400', badge: 'bg-pink-100 text-pink-800' },
+      { bar: 'bg-rose-400', badge: 'bg-rose-100 text-rose-800' },
+      { bar: 'bg-orange-400', badge: 'bg-orange-100 text-orange-800' },
+      { bar: 'bg-amber-400', badge: 'bg-amber-100 text-amber-800' },
+      { bar: 'bg-yellow-400', badge: 'bg-yellow-100 text-yellow-800' },
+      { bar: 'bg-lime-400', badge: 'bg-lime-100 text-lime-800' },
+      { bar: 'bg-emerald-400', badge: 'bg-emerald-100 text-emerald-800' },
+      { bar: 'bg-teal-400', badge: 'bg-teal-100 text-teal-800' },
+      { bar: 'bg-cyan-400', badge: 'bg-cyan-100 text-cyan-800' },
+      { bar: 'bg-sky-400', badge: 'bg-sky-100 text-sky-800' },
+      { bar: 'bg-violet-400', badge: 'bg-violet-100 text-violet-800' },
+      { bar: 'bg-fuchsia-400', badge: 'bg-fuchsia-100 text-fuchsia-800' }
+    ];
+    
+    // For levels beyond our color set, cycle through with opacity variations
+    if (level <= colorSets.length) {
+      return colorSets[level - 1];
+    } else {
+      const cycleIndex = (level - 1) % colorSets.length;
+      const opacity = Math.max(0.3, 1 - Math.floor((level - 1) / colorSets.length) * 0.2);
+      return {
+        bar: `${colorSets[cycleIndex].bar} opacity-${Math.round(opacity * 100)}`,
+        badge: colorSets[cycleIndex].badge
+      };
+    }
+  };
+
   // Enhanced tree view with role-based visual differences
   const renderTreeNode = (node: OrganizationNode, level = 0) => {
     if (!searchInHierarchy(node, searchTerm)) return null;
@@ -116,6 +149,7 @@ export default function OrganizationChart() {
     const indentLevel = level * 32; // Increased from 24px to 32px per level for better hierarchy
     const roleStyles = getRoleStyles(node.role);
     const RoleIcon = roleStyles.icon;
+    const levelColors = getLevelColors(level);
     
     // Different card sizes based on role
     const getCardStyling = () => {
@@ -133,11 +167,7 @@ export default function OrganizationChart() {
         {/* Level indicator bar */}
         {level > 0 && (
           <div 
-            className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-lg ${
-              level === 1 ? 'bg-blue-300' : 
-              level === 2 ? 'bg-green-300' : 
-              level === 3 ? 'bg-yellow-300' : 'bg-purple-300'
-            }`}
+            className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-lg ${levelColors.bar}`}
             style={{ marginLeft: `${indentLevel - 4}px` }}
           />
         )}
@@ -159,29 +189,6 @@ export default function OrganizationChart() {
             </button>
           )}
 
-          {/* Enhanced Connection Lines */}
-          {level > 0 && (
-            <>
-              {/* Horizontal line */}
-              <div 
-                className="absolute h-px bg-gray-400" 
-                style={{ 
-                  left: `${indentLevel - 16}px`, 
-                  width: '16px',
-                  top: '50%'
-                }} 
-              />
-              {/* Vertical line */}
-              <div 
-                className="absolute w-px bg-gray-400" 
-                style={{ 
-                  left: `${indentLevel - 16}px`, 
-                  height: level === 1 ? '24px' : '48px',
-                  top: level === 1 ? '-24px' : '-48px'
-                }} 
-              />
-            </>
-          )}
 
           {/* Employee Avatar with Role-based Sizing */}
           <div className="flex-shrink-0 mr-3">
@@ -232,11 +239,7 @@ export default function OrganizationChart() {
           <div className="flex-shrink-0 ml-2 flex items-center space-x-2">
             {/* Level indicator badge */}
             {level > 0 && (
-              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${
-                level === 1 ? 'bg-blue-100 text-blue-800' : 
-                level === 2 ? 'bg-green-100 text-green-800' : 
-                level === 3 ? 'bg-yellow-100 text-yellow-800' : 'bg-purple-100 text-purple-800'
-              }`}>
+              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${levelColors.badge}`}>
                 L{level}
               </span>
             )}
