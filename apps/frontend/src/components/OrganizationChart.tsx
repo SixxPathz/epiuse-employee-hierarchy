@@ -113,15 +113,37 @@ export default function OrganizationChart() {
 
     const hasChildren = node.children && node.children.length > 0;
     const isExpanded = expandedNodes.has(node.id);
-    const indentLevel = level * 24; // 24px per level
+    const indentLevel = level * 32; // Increased from 24px to 32px per level for better hierarchy
     const roleStyles = getRoleStyles(node.role);
     const RoleIcon = roleStyles.icon;
+    
+    // Different card sizes based on role
+    const getCardStyling = () => {
+      if (node.role === 'ADMIN') {
+        return 'p-4 border-2 shadow-lg';
+      } else if (node.role === 'MANAGER') {
+        return 'p-3 border-2 shadow-md';
+      } else {
+        return 'p-2 border shadow-sm';
+      }
+    };
 
     return (
-      <div key={node.id} className="mb-2">
+      <div key={node.id} className="mb-2 relative">
+        {/* Level indicator bar */}
+        {level > 0 && (
+          <div 
+            className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-lg ${
+              level === 1 ? 'bg-blue-300' : 
+              level === 2 ? 'bg-green-300' : 
+              level === 3 ? 'bg-yellow-300' : 'bg-purple-300'
+            }`}
+            style={{ marginLeft: `${indentLevel - 4}px` }}
+          />
+        )}
         <div
-          className={`flex items-center p-3 ${roleStyles.bgColor} rounded-lg border ${roleStyles.borderColor} shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02]`}
-          style={{ marginLeft: level > 0 ? `${Math.min(indentLevel, 48)}px` : '0px' }}
+          className={`flex items-center ${getCardStyling()} ${roleStyles.bgColor} rounded-lg ${roleStyles.borderColor} hover:shadow-lg transition-all duration-200 hover:scale-[1.01] relative`}
+          style={{ marginLeft: level > 0 ? `${indentLevel}px` : '0px' }}
         >
           {/* Expand/Collapse Button */}
           {hasChildren && (
@@ -137,48 +159,96 @@ export default function OrganizationChart() {
             </button>
           )}
 
-          {/* Connection Line - Hidden on mobile */}
+          {/* Enhanced Connection Lines */}
           {level > 0 && (
-            <div className="hidden md:block absolute w-6 h-px bg-gray-300" style={{ left: `${indentLevel - 12}px` }} />
+            <>
+              {/* Horizontal line */}
+              <div 
+                className="absolute h-px bg-gray-400" 
+                style={{ 
+                  left: `${indentLevel - 16}px`, 
+                  width: '16px',
+                  top: '50%'
+                }} 
+              />
+              {/* Vertical line */}
+              <div 
+                className="absolute w-px bg-gray-400" 
+                style={{ 
+                  left: `${indentLevel - 16}px`, 
+                  height: level === 1 ? '24px' : '48px',
+                  top: level === 1 ? '-24px' : '-48px'
+                }} 
+              />
+            </>
           )}
 
-          {/* Employee Avatar with Role-based Styling */}
+          {/* Employee Avatar with Role-based Sizing */}
           <div className="flex-shrink-0 mr-3">
-            <div className={`w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br ${roleStyles.bgGradient} rounded-full flex items-center justify-center text-white font-semibold text-xs md:text-sm shadow-lg`}>
+            <div className={`${
+              node.role === 'ADMIN' ? 'w-12 h-12' : 
+              node.role === 'MANAGER' ? 'w-10 h-10' : 'w-8 h-8'
+            } bg-gradient-to-br ${roleStyles.bgGradient} rounded-full flex items-center justify-center text-white font-semibold ${
+              node.role === 'ADMIN' ? 'text-sm' : 
+              node.role === 'MANAGER' ? 'text-sm' : 'text-xs'
+            } shadow-lg`}>
               {node.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
             </div>
           </div>
 
-          {/* Employee Info with Role Indicator */}
+          {/* Employee Info with Role-based Typography */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-2">
-              <h3 className={`text-sm font-semibold ${roleStyles.textColor} truncate`}>{node.name}</h3>
-              <RoleIcon className={`h-4 w-4 ${roleStyles.textColor}`} />
-              {level === 0 && <BuildingOfficeIcon className="h-4 w-4 text-amber-500" />}
+              <h3 className={`${
+                node.role === 'ADMIN' ? 'text-lg font-bold' : 
+                node.role === 'MANAGER' ? 'text-base font-semibold' : 'text-sm font-medium'
+              } ${roleStyles.textColor} truncate`}>{node.name}</h3>
+              <RoleIcon className={`${
+                node.role === 'ADMIN' ? 'h-5 w-5' : 'h-4 w-4'
+              } ${roleStyles.textColor}`} />
+              {level === 0 && <BuildingOfficeIcon className="h-5 w-5 text-amber-500" />}
             </div>
             <div className="flex items-center space-x-2">
-              <p className="text-xs text-gray-600 truncate">{node.position}</p>
-              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${roleStyles.badgeColor}`}>
+              <p className={`${
+                node.role === 'ADMIN' ? 'text-sm font-medium' : 
+                node.role === 'MANAGER' ? 'text-sm' : 'text-xs'
+              } text-gray-600 truncate`}>{node.position}</p>
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full ${
+                node.role === 'ADMIN' ? 'text-sm font-semibold' : 'text-xs font-medium'
+              } ${roleStyles.badgeColor}`}>
                 {roleStyles.roleLabel}
               </span>
             </div>
-            <div className="flex flex-col md:flex-row md:items-center md:space-x-3 mt-1 text-xs text-gray-500 space-y-1 md:space-y-0">
+            <div className={`flex flex-col md:flex-row md:items-center md:space-x-3 mt-1 ${
+              node.role === 'ADMIN' ? 'text-sm' : 'text-xs'
+            } text-gray-500 space-y-1 md:space-y-0`}>
               <span>ID: {node.employeeNumber}</span>
               <span className="hidden md:inline">•</span>
               <span className="truncate">{node.email}</span>
             </div>
           </div>
 
-          {/* Team Size Badge */}
-          {hasChildren && (
-            <div className="flex-shrink-0 ml-2">
+          {/* Level and Team Size Badges */}
+          <div className="flex-shrink-0 ml-2 flex items-center space-x-2">
+            {/* Level indicator badge */}
+            {level > 0 && (
+              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${
+                level === 1 ? 'bg-blue-100 text-blue-800' : 
+                level === 2 ? 'bg-green-100 text-green-800' : 
+                level === 3 ? 'bg-yellow-100 text-yellow-800' : 'bg-purple-100 text-purple-800'
+              }`}>
+                L{level}
+              </span>
+            )}
+            {/* Team size badge */}
+            {hasChildren && (
               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${roleStyles.badgeColor}`}>
                 <UserIcon className="h-3 w-3 mr-1" />
                 <span className="hidden sm:inline">{node.children.length}</span>
                 <span className="sm:hidden">{node.children.length}</span>
               </span>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Render Children */}
