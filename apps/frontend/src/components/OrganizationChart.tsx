@@ -86,21 +86,21 @@ export default function OrganizationChart() {
         };
       case 'MANAGER':
         return {
-          bgGradient: 'from-green-500 to-emerald-600',
-          borderColor: 'border-green-200',
-          bgColor: 'bg-green-50',
-          textColor: 'text-green-700',
-          badgeColor: 'bg-green-100 text-green-800',
+          bgGradient: 'from-blue-500 to-blue-600',
+          borderColor: 'border-blue-200',
+          bgColor: 'bg-blue-50',
+          textColor: 'text-blue-700',
+          badgeColor: 'bg-blue-100 text-blue-800',
           icon: UserGroupIcon,
           roleLabel: 'Manager'
         };
       default: // EMPLOYEE
         return {
-          bgGradient: 'from-blue-500 to-purple-600',
-          borderColor: 'border-blue-200',
-          bgColor: 'bg-blue-50',
-          textColor: 'text-blue-700',
-          badgeColor: 'bg-blue-100 text-blue-800',
+          bgGradient: 'from-gray-400 to-gray-500',
+          borderColor: 'border-gray-200',
+          bgColor: 'bg-white',
+          textColor: 'text-gray-700',
+          badgeColor: 'bg-gray-100 text-gray-800',
           icon: UserIcon,
           roleLabel: 'Employee'
         };
@@ -308,13 +308,13 @@ export default function OrganizationChart() {
         <div className="card">
           <div className="card-body">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Organization Statistics</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600">{allNodes.length}</div>
                 <div className="text-sm text-gray-500">Total Employees</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
+                <div className="text-2xl font-bold text-blue-600">
                   {allNodes.filter(n => n.role === 'MANAGER').length}
                 </div>
                 <div className="text-sm text-gray-500">Managers</div>
@@ -324,12 +324,6 @@ export default function OrganizationChart() {
                   {allNodes.filter(n => n.role === 'ADMIN').length}
                 </div>
                 <div className="text-sm text-gray-500">Admins</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">
-                  {allNodes.length > 0 ? Math.max(...allNodes.map(n => (n.children?.length || 0))) : 0}
-                </div>
-                <div className="text-sm text-gray-500">Max Team Size</div>
               </div>
             </div>
           </div>
