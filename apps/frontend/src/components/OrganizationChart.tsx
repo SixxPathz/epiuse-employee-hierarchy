@@ -7,7 +7,9 @@ import {
   ChevronDownIcon, 
   ChevronRightIcon,
   UserIcon,
-  BuildingOfficeIcon 
+  BuildingOfficeIcon,
+  UserGroupIcon,
+  ShieldCheckIcon
 } from '@heroicons/react/24/outline';
 import api from '../utils/api';
 
@@ -69,18 +71,56 @@ export default function OrganizationChart() {
     );
   }
 
-  // Enhanced tree view with better styling and interactivity
+  // Get role-based styling for visual differentiation
+  const getRoleStyles = (role: string) => {
+    switch (role) {
+      case 'ADMIN':
+        return {
+          bgGradient: 'from-red-500 to-pink-600',
+          borderColor: 'border-red-200',
+          bgColor: 'bg-red-50',
+          textColor: 'text-red-700',
+          badgeColor: 'bg-red-100 text-red-800',
+          icon: ShieldCheckIcon,
+          roleLabel: 'Admin'
+        };
+      case 'MANAGER':
+        return {
+          bgGradient: 'from-green-500 to-emerald-600',
+          borderColor: 'border-green-200',
+          bgColor: 'bg-green-50',
+          textColor: 'text-green-700',
+          badgeColor: 'bg-green-100 text-green-800',
+          icon: UserGroupIcon,
+          roleLabel: 'Manager'
+        };
+      default: // EMPLOYEE
+        return {
+          bgGradient: 'from-blue-500 to-purple-600',
+          borderColor: 'border-blue-200',
+          bgColor: 'bg-blue-50',
+          textColor: 'text-blue-700',
+          badgeColor: 'bg-blue-100 text-blue-800',
+          icon: UserIcon,
+          roleLabel: 'Employee'
+        };
+    }
+  };
+
+  // Enhanced tree view with role-based visual differences
   const renderTreeNode = (node: OrganizationNode, level = 0) => {
     if (!searchInHierarchy(node, searchTerm)) return null;
 
     const hasChildren = node.children && node.children.length > 0;
     const isExpanded = expandedNodes.has(node.id);
     const indentLevel = level * 24; // 24px per level
+    const roleStyles = getRoleStyles(node.role);
+    const RoleIcon = roleStyles.icon;
 
     return (
       <div key={node.id} className="mb-2">
         <div
-          className="flex items-center p-3 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
+          className={`flex items-center p-3 ${roleStyles.bgColor} rounded-lg border ${roleStyles.borderColor} shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02]`}
           style={{ marginLeft: level > 0 ? `${Math.min(indentLevel, 48)}px` : '0px' }}
         >
           {/* Expand/Collapse Button */}
@@ -102,20 +142,26 @@ export default function OrganizationChart() {
             <div className="hidden md:block absolute w-6 h-px bg-gray-300" style={{ left: `${indentLevel - 12}px` }} />
           )}
 
-          {/* Employee Avatar */}
+          {/* Employee Avatar with Role-based Styling */}
           <div className="flex-shrink-0 mr-3">
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-xs md:text-sm">
+            <div className={`w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br ${roleStyles.bgGradient} rounded-full flex items-center justify-center text-white font-semibold text-xs md:text-sm shadow-lg`}>
               {node.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
             </div>
           </div>
 
-          {/* Employee Info */}
+          {/* Employee Info with Role Indicator */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-2">
-              <h3 className="text-sm font-semibold text-gray-900 truncate">{node.name}</h3>
+              <h3 className={`text-sm font-semibold ${roleStyles.textColor} truncate`}>{node.name}</h3>
+              <RoleIcon className={`h-4 w-4 ${roleStyles.textColor}`} />
               {level === 0 && <BuildingOfficeIcon className="h-4 w-4 text-amber-500" />}
             </div>
-            <p className="text-xs text-gray-600 truncate">{node.position}</p>
+            <div className="flex items-center space-x-2">
+              <p className="text-xs text-gray-600 truncate">{node.position}</p>
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${roleStyles.badgeColor}`}>
+                {roleStyles.roleLabel}
+              </span>
+            </div>
             <div className="flex flex-col md:flex-row md:items-center md:space-x-3 mt-1 text-xs text-gray-500 space-y-1 md:space-y-0">
               <span>ID: {node.employeeNumber}</span>
               <span className="hidden md:inline">•</span>
@@ -126,7 +172,7 @@ export default function OrganizationChart() {
           {/* Team Size Badge */}
           {hasChildren && (
             <div className="flex-shrink-0 ml-2">
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${roleStyles.badgeColor}`}>
                 <UserIcon className="h-3 w-3 mr-1" />
                 <span className="hidden sm:inline">{node.children.length}</span>
                 <span className="sm:hidden">{node.children.length}</span>
@@ -145,33 +191,46 @@ export default function OrganizationChart() {
     );
   };
 
-  // Compact card view for better overview
-  const renderCompactNode = (node: OrganizationNode) => (
-    <div key={node.id} className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow duration-200">
-      <div className="flex items-center space-x-3">
-        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
-          {node.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-semibold text-gray-900 truncate">{node.name}</h3>
-          <p className="text-sm text-gray-600 truncate">{node.position}</p>
-          <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
-            <span>ID: {node.employeeNumber}</span>
-            <span>•</span>
-            <span className="truncate">{node.email}</span>
+  // Compact card view with role-based styling
+  const renderCompactNode = (node: OrganizationNode) => {
+    const roleStyles = getRoleStyles(node.role);
+    const RoleIcon = roleStyles.icon;
+    
+    return (
+      <div key={node.id} className={`${roleStyles.bgColor} rounded-lg border ${roleStyles.borderColor} p-4 hover:shadow-md transition-all duration-200 hover:scale-[1.02]`}>
+        <div className="flex items-center space-x-3">
+          <div className={`w-12 h-12 bg-gradient-to-br ${roleStyles.bgGradient} rounded-full flex items-center justify-center text-white font-semibold shadow-lg`}>
+            {node.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
           </div>
-        </div>
-        {node.children && node.children.length > 0 && (
-          <div className="flex-shrink-0">
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-              <UserIcon className="h-3 w-3 mr-1" />
-              {node.children.length} direct reports
-            </span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center space-x-2">
+              <h3 className={`text-lg font-semibold ${roleStyles.textColor} truncate`}>{node.name}</h3>
+              <RoleIcon className={`h-4 w-4 ${roleStyles.textColor}`} />
+            </div>
+            <div className="flex items-center space-x-2">
+              <p className="text-sm text-gray-600 truncate">{node.position}</p>
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${roleStyles.badgeColor}`}>
+                {roleStyles.roleLabel}
+              </span>
+            </div>
+            <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
+              <span>ID: {node.employeeNumber}</span>
+              <span>•</span>
+              <span className="truncate">{node.email}</span>
+            </div>
           </div>
-        )}
+          {node.children && node.children.length > 0 && (
+            <div className="flex-shrink-0">
+              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${roleStyles.badgeColor}`}>
+                <UserIcon className="h-3 w-3 mr-1" />
+                {node.children.length} direct reports
+              </span>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Get all nodes for compact view
   const getAllNodes = (node: OrganizationNode): OrganizationNode[] => {
@@ -249,7 +308,7 @@ export default function OrganizationChart() {
         <div className="card">
           <div className="card-body">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Organization Statistics</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600">{allNodes.length}</div>
                 <div className="text-sm text-gray-500">Total Employees</div>
@@ -261,8 +320,14 @@ export default function OrganizationChart() {
                 <div className="text-sm text-gray-500">Managers</div>
               </div>
               <div className="text-center">
+                <div className="text-2xl font-bold text-red-600">
+                  {allNodes.filter(n => n.role === 'ADMIN').length}
+                </div>
+                <div className="text-sm text-gray-500">Admins</div>
+              </div>
+              <div className="text-center">
                 <div className="text-2xl font-bold text-purple-600">
-                  {Math.max(...allNodes.map(n => getAllNodes(n).length - 1))}
+                  {allNodes.length > 0 ? Math.max(...allNodes.map(n => (n.children?.length || 0))) : 0}
                 </div>
                 <div className="text-sm text-gray-500">Max Team Size</div>
               </div>
