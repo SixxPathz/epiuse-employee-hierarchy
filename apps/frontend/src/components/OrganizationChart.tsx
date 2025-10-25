@@ -215,17 +215,10 @@ export default function OrganizationChart() {
               } ${roleStyles.textColor}`} />
               {level === 0 && <BuildingOfficeIcon className="h-5 w-5 text-amber-500" />}
             </div>
-            <div className="flex items-center space-x-2">
-              <p className={`${
-                node.role === 'ADMIN' ? 'text-sm font-medium' : 
-                node.role === 'MANAGER' ? 'text-sm' : 'text-xs'
-              } text-gray-600 truncate`}>{node.position}</p>
-              <span className={`inline-flex items-center px-2 py-0.5 rounded-full ${
-                node.role === 'ADMIN' ? 'text-sm font-semibold' : 'text-xs font-medium'
-              } ${roleStyles.badgeColor}`}>
-                {roleStyles.roleLabel}
-              </span>
-            </div>
+            <p className={`${
+              node.role === 'ADMIN' ? 'text-sm font-medium' : 
+              node.role === 'MANAGER' ? 'text-sm' : 'text-xs'
+            } text-gray-600 truncate`}>{node.position}</p>
             <div className={`flex flex-col md:flex-row md:items-center md:space-x-3 mt-1 ${
               node.role === 'ADMIN' ? 'text-sm' : 'text-xs'
             } text-gray-500 space-y-1 md:space-y-0`}>
@@ -235,23 +228,16 @@ export default function OrganizationChart() {
             </div>
           </div>
 
-          {/* Level and Team Size Badges */}
-          <div className="flex-shrink-0 ml-2 flex items-center space-x-2">
-            {/* Level indicator badge */}
-            {level > 0 && (
-              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${levelColors.badge}`}>
-                L{level}
-              </span>
-            )}
-            {/* Team size badge */}
-            {hasChildren && (
+          {/* Team Size Badge */}
+          {hasChildren && (
+            <div className="flex-shrink-0 ml-2">
               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${roleStyles.badgeColor}`}>
                 <UserIcon className="h-3 w-3 mr-1" />
                 <span className="hidden sm:inline">{node.children.length}</span>
                 <span className="sm:hidden">{node.children.length}</span>
               </span>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Render Children */}
