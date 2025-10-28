@@ -11,17 +11,19 @@ Just go to https://epiuse-employee-hierarchy.vercel.app/ and log in with email a
 
 If you want to try it out, I've set up some demo accounts:
 
+**default password for all accounts (New users will be prompted to change it):** `securepassword123`
+
 **Admin/CEO (can do everything):**
 - Email: `thabo.mthembu@epiuse.com`
-- Password: `securepassword123`
+
 
 **Manager (can manage their team):**
 - Email: `sipho.ngcobo@epiuse.com`  
-- Password: `securepassword123`
+
 
 **Employee (can view stuff and update their profile):**
 - Email: `kagiso.morake@epiuse.com`
-- Password: `securepassword123`
+
 
 **Forgot your password?** Click "Forgot Password" on the login screen and you'll get an email with a reset link.
 
@@ -132,11 +134,11 @@ You basically run the show - you can manage the entire organization, create/edit
 
 
 ### **If You're a Manager**
-You get full control within your department. The cool part is you can assign employees to yourself OR other managers in your department - gives you flexibility in organizing your team. You can create sub-managers, see comprehensive team metrics, and reassign people between managers in your department without bothering an admin. You can also export your team's data and see salaries for everyone who reports to you (directly or indirectly).
+You get full control within your department. The cool part is you can assign employees to yourself OR other managers in your department - gives you flexibility in organizing your team. You can create sub-managers, see comprehensive team metrics, and reassign people between managers in your department without bothering an admin. 
 
 
 ### **If You're an Employee**
-You can update your own profile and password, browse the org chart to see how the company is structured, and view the colleague directory. You can see public info about your teammates but can't mess with anything important - which is probably for the best.
+You can see your own profile and update password, browse the org chart to see how the company is structured, and view the colleague directory. You can see public info about your teammates but can't mess with anything important - which is probably for the best.
 
 ---
 
